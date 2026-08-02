@@ -157,6 +157,27 @@
   .wa{background:#1EBE5D;color:#fff;border:none;border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
   .slotgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
   .slot{aspect-ratio:3/4;border-radius:12px;background:var(--surface2);border:1.5px dashed var(--border);display:grid;place-items:center;color:var(--muted);font-size:11.5px;text-align:center;padding:6px;line-height:1.5;}
+  /* ---------- AGENDA ---------- */
+  .daystrip{display:flex;gap:6px;overflow-x:auto;padding:2px 0 12px;}
+  .day{min-width:46px;padding:8px 4px;border-radius:12px;background:var(--surface);border:1px solid var(--border);text-align:center;cursor:pointer;flex-shrink:0;}
+  .day small{display:block;font-size:10px;color:var(--muted);text-transform:uppercase;margin-bottom:2px;}
+  .day b{font-size:15px;}
+  .day.on{background:linear-gradient(150deg,rgba(201,123,142,.25),var(--surface));border-color:var(--rose);}
+  .day.today b{color:var(--gold);}
+  .appt2{display:flex;gap:12px;align-items:center;padding:12px 14px;margin-bottom:10px;cursor:pointer;}
+  .appt2:hover{border-color:var(--rose);}
+  .appt2 .at{font-size:14.5px;font-weight:700;min-width:48px;} .appt2 .at small{display:block;font-weight:400;color:var(--muted);font-size:10.5px;}
+  .stbadge{font-size:10.5px;font-weight:600;padding:3px 9px;border-radius:12px;white-space:nowrap;flex-shrink:0;}
+  .st-programada{background:var(--surface2);color:var(--muted);}
+  .st-confirmada{background:rgba(143,199,161,.14);color:var(--green);}
+  .st-en_consulta{background:rgba(201,123,142,.16);color:var(--rose2);}
+  .st-completada{background:rgba(143,199,161,.22);color:var(--green);}
+  .st-no_show{background:rgba(230,120,120,.14);color:#F09090;}
+  .st-cancelada{background:var(--surface2);color:var(--muted);text-decoration:line-through;}
+  .banner{background:rgba(201,166,107,.12);border:1px solid rgba(201,166,107,.35);border-radius:12px;padding:10px 14px;font-size:13px;color:var(--gold);margin-bottom:12px;}
+  .stbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
+  .stbtns button{background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:7px 10px;font-size:12px;cursor:pointer;}
+  .stbtns button.on{border-color:var(--rose);color:var(--rose2);}
   /* modals */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;place-items:center;z-index:60;padding:18px;} .overlay.show{display:grid;}
   .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;width:100%;max-width:440px;max-height:88vh;overflow-y:auto;} .modal h3{font-size:17px;margin-bottom:14px;}
@@ -199,7 +220,7 @@
         <a data-view="dash"><span class="ic">▤</span><span data-i18n="nav_dash">Dashboard</span></a>
         <a class="active" data-view="pac"><span class="ic">☺</span><span data-i18n="nav_pac">Pacientes</span></a>
         <a data-view="cot"><span class="ic">✦</span><span data-i18n="nav_cot">Cotizador</span></a>
-        <a data-view="soon"><span class="ic">▦</span><span data-i18n="nav_age">Agenda</span></a>
+        <a data-view="age"><span class="ic">▦</span><span data-i18n="nav_age">Agenda</span></a>
       </nav>
       <div class="side-foot"><div class="who"><div class="avatar" id="userAv">·</div><div><div id="userName" style="font-size:13px;font-weight:600">—</div><div class="muted" style="font-size:11px" data-i18n="role">Administradora</div></div></div><div class="logout" onclick="doLogout()" data-i18n="logout">Sair</div></div>
     </aside>
@@ -217,6 +238,7 @@
             <div class="card kpi"><div class="k-top"><div class="k-ic">◈</div><span data-i18n="k_proc">Procedimentos</span></div><div class="k-val" id="kpiProcs">0</div></div>
             <div class="card kpi"><div class="k-top"><div class="k-ic">▦</div><span data-i18n="k_rev">Receita</span></div><div class="k-val" id="kpiRev">$0</div></div>
             <div class="card kpi"><div class="k-top"><div class="k-ic">✦</div><span data-i18n="k_quotes">Cotizações</span></div><div class="k-val" id="kpiQuotes">0</div></div>
+            <div class="card kpi"><div class="k-top"><div class="k-ic">▦</div><span data-i18n="k_today">Citas hoy</span></div><div class="k-val" id="kpiToday">0</div></div>
           </div>
         </div>
 
@@ -262,6 +284,14 @@
           </div>
         </div>
 
+        <!-- AGENDA -->
+        <div id="age" class="view">
+          <div class="page-head"><h1 data-i18n="nav_age">Agenda</h1><button class="btn" onclick="openApptModal()">+ <span data-i18n="new_appt">Nueva cita</span></button></div>
+          <div class="daystrip" id="agStrip"></div>
+          <div class="muted" id="agTitle" style="font-size:12.5px;margin-bottom:10px"></div>
+          <div id="agBody"></div>
+        </div>
+
         <!-- EM BREVE -->
         <div id="soon" class="view">
           <div class="card" style="text-align:center;padding:50px"><div style="font-size:34px">▦</div><h1 style="font-size:20px;margin:12px 0 6px" data-i18n="soon_t">Em construção</h1><p class="muted" data-i18n="soon_d">A Agenda entra na próxima fatia.</p></div>
@@ -273,7 +303,7 @@
      <a data-view="dash"><span class="ic">▤</span><span data-i18n="nav_dash">Dashboard</span></a>
      <a class="active" data-view="pac"><span class="ic">☺</span><span data-i18n="nav_pac">Pacientes</span></a>
      <a data-view="cot"><span class="ic">✦</span><span data-i18n="nav_cot">Cotizador</span></a>
-     <a data-view="soon"><span class="ic">▦</span><span data-i18n="nav_age">Agenda</span></a>
+     <a data-view="age"><span class="ic">▦</span><span data-i18n="nav_age">Agenda</span></a>
    </nav>
   </div>
 
@@ -291,6 +321,19 @@
     <div class="field"><label data-i18n="f_lot">Lote</label><input id="prLot" placeholder="Lote do produto"></div>
     <div class="field"><label data-i18n="f_value">Valor (MXN)</label><input id="prValue" type="number"></div>
     <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovProc')" data-i18n="cancel">Cancelar</button><button class="btn" id="saveProcBtn" onclick="saveProc()" data-i18n="save">Salvar</button></div></div></div>
+
+  <!-- MODAL NOVA CITA -->
+  <div class="overlay" id="ovAppt"><div class="modal"><h3 data-i18n="new_appt">Nueva cita</h3>
+    <div class="field"><label data-i18n="f_patient">Paciente</label><select id="apPatient"></select></div>
+    <div class="field"><label data-i18n="f_date">Fecha</label><input id="apDate" type="date"></div>
+    <div class="field"><label data-i18n="f_time">Hora</label><input id="apTime" type="time"></div>
+    <div class="field"><label data-i18n="f_dur">Duración (min)</label><select id="apDur"><option>30</option><option>45</option><option selected>60</option><option>90</option></select></div>
+    <div class="field"><label data-i18n="f_treat">Tratamiento</label><select id="apTreat"></select></div>
+    <div class="field"><label data-i18n="f_notes">Notas</label><input id="apNotes"></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovAppt')" data-i18n="cancel">Cancelar</button><button class="btn" id="saveApptBtn" onclick="saveAppt()" data-i18n="save">Guardar</button></div></div></div>
+
+  <!-- MODAL AÇÕES DA CITA -->
+  <div class="overlay" id="ovApptAct"><div class="modal" id="apActBody"></div></div>
 
   <!-- WIZARD ANAMNESE -->
   <div class="wizard" id="wizard">
@@ -351,8 +394,8 @@ const initials=n=>(n||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCa
 const fmtDate=d=>{if(!d)return '—';const p=String(d).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0].slice(2)}`:d;};
 
 /* ============ i18n ============ */
-const T={pt:{nav_dash:'Dashboard',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',role:'Administradora',logout:'Sair',search:'Buscar paciente...',hi:'Bem-vinda',k_act:'Pacientes',k_proc:'Procedimentos',k_rev:'Receita',k_quotes:'Cotizações',patients:'Pacientes',new_pat:'Novo paciente',no_pat:'Nenhum paciente ainda. Clique em "Novo paciente" para começar.',back:'Voltar',new_proc:'Registrar procedimento',f_name:'Nome',f_birth:'Nascimento',f_phone:'Telefone',f_skin:'Tipo de pele',f_proc:'Procedimento',f_product:'Produto / marca',f_lot:'Lote',f_value:'Valor (MXN)',cancel:'Cancelar',save:'Salvar',soon_t:'Em construção',soon_d:'A Agenda entra na próxima fatia.',skin:'Tipo de pele',allergy:'Alergias',tl:'Histórico de tratamentos',add_proc:'+ Procedimento',procs_n:'procedimentos',quoter:'Cotizador',quote:'Cotização',clear:'Limpar',f_patient:'Paciente',cart_empty:'Toque em + nos tratamentos para montar a proposta.',f_disc:'Desconto (MXN)',f_reason:'Motivo do desconto',f_pay:'Forma de pagamento',subtotal:'Subtotal',discount:'Desconto',save_quote:'Guardar cotização',quotes_t:'Cotizações',no_quotes:'Nenhuma cotização ainda.',saved:'Cotização salva! ✅',pat_saved:'Paciente salvo ✅',proc_saved:'Procedimento registrado ✅',no_patient:'Sem paciente',login_sub:'Entre para acessar a sua clínica',lbl_email:'E-mail',lbl_pass:'Senha',enter:'Entrar',create:'Criar conta',first:'Primeira vez?',have:'Já tem conta?',need_items:'Adicione ao menos um tratamento.',need_reason:'Descreva o motivo do desconto.',anam_do:'Realizar anamnese',anam_view:'Ver / editar',anam_done:'Assinada em',anam_img:'Uso de imagem autorizado',anam_none:'Anamnese pendente — realize na primeira consulta.'},
-       es:{nav_dash:'Panel',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',role:'Administradora',logout:'Salir',search:'Buscar paciente...',hi:'Bienvenida',k_act:'Pacientes',k_proc:'Procedimientos',k_rev:'Ingresos',k_quotes:'Cotizaciones',patients:'Pacientes',new_pat:'Nuevo paciente',no_pat:'Aún no hay pacientes. Haz clic en "Nuevo paciente" para empezar.',back:'Volver',new_proc:'Registrar procedimiento',f_name:'Nombre',f_birth:'Nacimiento',f_phone:'Teléfono',f_skin:'Tipo de piel',f_proc:'Procedimiento',f_product:'Producto / marca',f_lot:'Lote',f_value:'Valor (MXN)',cancel:'Cancelar',save:'Guardar',soon_t:'En construcción',soon_d:'La Agenda llega en la próxima fase.',skin:'Tipo de piel',allergy:'Alergias',tl:'Historial de tratamientos',add_proc:'+ Procedimiento',procs_n:'procedimientos',quoter:'Cotizador',quote:'Cotización',clear:'Limpiar',f_patient:'Paciente',cart_empty:'Toca + en los tratamientos para armar la propuesta.',f_disc:'Descuento (MXN)',f_reason:'Motivo del descuento',f_pay:'Forma de pago',subtotal:'Subtotal',discount:'Descuento',save_quote:'Guardar cotización',quotes_t:'Cotizaciones',no_quotes:'Aún no hay cotizaciones.',saved:'¡Cotización guardada! ✅',pat_saved:'Paciente guardado ✅',proc_saved:'Procedimiento registrado ✅',no_patient:'Sin paciente',login_sub:'Entra para acceder a tu clínica',lbl_email:'Correo',lbl_pass:'Contraseña',enter:'Entrar',create:'Crear cuenta',first:'¿Primera vez?',have:'¿Ya tienes cuenta?',need_items:'Agrega al menos un tratamiento.',need_reason:'Describe el motivo del descuento.',anam_do:'Realizar anamnesis',anam_view:'Ver / editar',anam_done:'Firmada el',anam_img:'Uso de imagen autorizado',anam_none:'Anamnesis pendiente — realízala en la primera consulta.'}};
+const T={pt:{nav_dash:'Dashboard',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',role:'Administradora',logout:'Sair',search:'Buscar paciente...',hi:'Bem-vinda',k_act:'Pacientes',k_proc:'Procedimentos',k_rev:'Receita',k_quotes:'Cotizações',patients:'Pacientes',new_pat:'Novo paciente',no_pat:'Nenhum paciente ainda. Clique em "Novo paciente" para começar.',back:'Voltar',new_proc:'Registrar procedimento',f_name:'Nome',f_birth:'Nascimento',f_phone:'Telefone',f_skin:'Tipo de pele',f_proc:'Procedimento',f_product:'Produto / marca',f_lot:'Lote',f_value:'Valor (MXN)',cancel:'Cancelar',save:'Salvar',soon_t:'Em construção',soon_d:'A Agenda entra na próxima fatia.',skin:'Tipo de pele',allergy:'Alergias',tl:'Histórico de tratamentos',add_proc:'+ Procedimento',procs_n:'procedimentos',quoter:'Cotizador',quote:'Cotização',clear:'Limpar',f_patient:'Paciente',cart_empty:'Toque em + nos tratamentos para montar a proposta.',f_disc:'Desconto (MXN)',f_reason:'Motivo do desconto',f_pay:'Forma de pagamento',subtotal:'Subtotal',discount:'Desconto',save_quote:'Guardar cotização',quotes_t:'Cotizações',no_quotes:'Nenhuma cotização ainda.',saved:'Cotização salva! ✅',pat_saved:'Paciente salvo ✅',proc_saved:'Procedimento registrado ✅',no_patient:'Sem paciente',login_sub:'Entre para acessar a sua clínica',lbl_email:'E-mail',lbl_pass:'Senha',enter:'Entrar',create:'Criar conta',first:'Primeira vez?',have:'Já tem conta?',need_items:'Adicione ao menos um tratamento.',need_reason:'Descreva o motivo do desconto.',anam_do:'Realizar anamnese',anam_view:'Ver / editar',anam_done:'Assinada em',anam_img:'Uso de imagem autorizado',anam_none:'Anamnese pendente — realize na primeira consulta.',new_appt:'Nova consulta',f_date:'Data',f_time:'Hora',f_dur:'Duração (min)',f_treat:'Tratamento',f_notes:'Notas',k_today:'Consultas hoje'},
+       es:{nav_dash:'Panel',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',role:'Administradora',logout:'Salir',search:'Buscar paciente...',hi:'Bienvenida',k_act:'Pacientes',k_proc:'Procedimientos',k_rev:'Ingresos',k_quotes:'Cotizaciones',patients:'Pacientes',new_pat:'Nuevo paciente',no_pat:'Aún no hay pacientes. Haz clic en "Nuevo paciente" para empezar.',back:'Volver',new_proc:'Registrar procedimiento',f_name:'Nombre',f_birth:'Nacimiento',f_phone:'Teléfono',f_skin:'Tipo de piel',f_proc:'Procedimiento',f_product:'Producto / marca',f_lot:'Lote',f_value:'Valor (MXN)',cancel:'Cancelar',save:'Guardar',soon_t:'En construcción',soon_d:'La Agenda llega en la próxima fase.',skin:'Tipo de piel',allergy:'Alergias',tl:'Historial de tratamientos',add_proc:'+ Procedimiento',procs_n:'procedimientos',quoter:'Cotizador',quote:'Cotización',clear:'Limpiar',f_patient:'Paciente',cart_empty:'Toca + en los tratamientos para armar la propuesta.',f_disc:'Descuento (MXN)',f_reason:'Motivo del descuento',f_pay:'Forma de pago',subtotal:'Subtotal',discount:'Descuento',save_quote:'Guardar cotización',quotes_t:'Cotizaciones',no_quotes:'Aún no hay cotizaciones.',saved:'¡Cotización guardada! ✅',pat_saved:'Paciente guardado ✅',proc_saved:'Procedimiento registrado ✅',no_patient:'Sin paciente',login_sub:'Entra para acceder a tu clínica',lbl_email:'Correo',lbl_pass:'Contraseña',enter:'Entrar',create:'Crear cuenta',first:'¿Primera vez?',have:'¿Ya tienes cuenta?',need_items:'Agrega al menos un tratamiento.',need_reason:'Describe el motivo del descuento.',anam_do:'Realizar anamnesis',anam_view:'Ver / editar',anam_done:'Firmada el',anam_img:'Uso de imagen autorizado',anam_none:'Anamnesis pendiente — realízala en la primera consulta.',new_appt:'Nueva cita',f_date:'Fecha',f_time:'Hora',f_dur:'Duración (min)',f_treat:'Tratamiento',f_notes:'Notas',k_today:'Citas hoy'}};
 const tr=k=>T[lang][k]||k;
 function setLang(l){lang=l;document.getElementById('pt').classList.toggle('on',l==='pt');document.getElementById('es').classList.toggle('on',l==='es');
   document.querySelectorAll('[data-i18n]').forEach(e=>{const k=e.getAttribute('data-i18n');if(T[l][k])e.textContent=T[l][k];});
@@ -391,14 +434,16 @@ async function onLogin(name){
 /* ============ DADOS (Supabase ou demo) ============ */
 async function loadAll(){
   if(DEMO){renderAll();return;}
-  const[p,q,an]=await Promise.all([
+  const[p,q,an,ap]=await Promise.all([
     db.from('patients').select('*, procedures(*)').order('created_at',{ascending:true}),
     db.from('quotes').select('*').order('created_at',{ascending:false}),
-    db.from('anamneses').select('*').order('created_at',{ascending:false})
+    db.from('anamneses').select('*').order('created_at',{ascending:false}),
+    db.from('appointments').select('*').order('starts_at',{ascending:true})
   ]);
   if(!p.error)patients=(p.data||[]).map(x=>({...x,procedures:(x.procedures||[]).sort((a,b)=>String(b.performed_at||'').localeCompare(String(a.performed_at||'')))}));
   quotes=q.error?[]:(q.data||[]);
   anamneses=an.error?[]:(an.data||[]);
+  appts=ap.error?[]:(ap.data||[]);
   renderAll();
 }
 function renderAll(){renderPatients();renderDash();renderCatalog();renderCart();renderPatientSelect();}
@@ -640,7 +685,8 @@ function alertsFor(a){
 function renderDash(){
   let procs=0,rev=0;patients.forEach(p=>(p.procedures||[]).forEach(pr=>{procs++;rev+=(pr.value_cents||0)/100;}));
   const e=id=>document.getElementById(id);
-  if(e('kpiPatients')){e('kpiPatients').textContent=patients.length;e('kpiProcs').textContent=procs;e('kpiRev').textContent=money(rev);e('kpiQuotes').textContent=quotes.length;}
+  if(e('kpiPatients')){e('kpiPatients').textContent=patients.length;e('kpiProcs').textContent=procs;e('kpiRev').textContent=money(rev);e('kpiQuotes').textContent=quotes.length;
+    if(e('kpiToday')){const td=localISO(new Date());e('kpiToday').textContent=appts.filter(a=>a.status!=='cancelada'&&localISO(new Date(a.starts_at))===td).length;}}
 }
 function renderPatients(){
   const el=document.getElementById('plist');if(!el)return;
@@ -677,7 +723,7 @@ function renderDetail_legacy(){
 function startQuoteFor(pid){show('cot');const sel=document.getElementById('qPatient');sel.value=pid;}
 function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('show'));document.getElementById(v).classList.add('show');
   document.querySelectorAll('.nav a,.mobilenav a').forEach(a=>a.classList.toggle('active',a.dataset.view===v));
-  if(v==='dash')renderDash();document.querySelector('.content').scrollTop=0;}
+  if(v==='dash')renderDash();if(v==='age')renderAgenda();document.querySelector('.content').scrollTop=0;}
 function openPatientModal(){npName.value='';npBirth.value='';npPhone.value='';document.getElementById('ovPatient').classList.add('show');}
 function openProcModal(){
   const sel=document.getElementById('prName');
@@ -752,6 +798,7 @@ function renderDetail(){
   const stage=p.vip?'VIP':(visits>=3?L('Recurrente','Recorrente'):(visits>=1?L('Paciente','Paciente'):L('Nueva','Nova')));
   const urgent=clocks.find(k=>k.status==='over')||clocks.find(k=>k.status==='due');
   const pending=pQuotes.filter(q=>q.status==='propuesta').reduce((a,q)=>a+(q.total_cents||0)/100,0);
+  const nextAp=appts.filter(a=>a.patient_id===p.id&&a.status!=='cancelada'&&new Date(a.starts_at)>new Date()).sort((a,b)=>String(a.starts_at).localeCompare(String(b.starts_at)))[0];
   document.getElementById('detailCard').innerHTML=`
    <div class="card">
     <div class="phead"><div class="avatar">${initials(p.full_name)}</div>
@@ -761,7 +808,8 @@ function renderDetail(){
       <div class="facts">
         <div class="fact"><small>${L('Última visita','Última visita')}</small><b>${visits?fmtDate(p.procedures[0].performed_at):'—'}</b></div>
         <div class="fact"><small>LTV</small><b>${money(spent)}</b></div>
-        <div class="fact"><small>${L('Pendiente','Pendente')}</small><b>${pending?money(pending):'—'}</b></div></div>
+        <div class="fact"><small>${L('Pendiente','Pendente')}</small><b>${pending?money(pending):'—'}</b></div>
+        <div class="fact"><small>${L('Próxima cita','Próxima consulta')}</small><b>${nextAp?fmtDate(nextAp.starts_at)+' '+timeOf(nextAp.starts_at):'—'}</b></div></div>
       ${alerts.length?`<div class="alert-chips">${alerts.map(a=>`<span class="achip ${a.c}">⚠ ${a.l[alertLang]}</span>`).join('')}</div>`:''}
       ${urgent?`<div class="clock" style="margin-top:8px"><div class="ring" style="background:${urgent.status==='over'?'rgba(230,120,120,.14)':'rgba(201,166,107,.15)'}">🕐</div><div><div class="cn">${urgent.c.label}</div><div class="cs">${urgent.status==='over'?L('vencido hace ','vencido há ')+(-urgent.left)+L(' días',' dias'):L('vence en ','vence em ')+urgent.left+L(' días',' dias')}</div></div></div>`:''}
       <div style="display:flex;gap:8px;margin-top:14px;width:100%;flex-wrap:wrap">
@@ -819,12 +867,101 @@ function renderPTab(){
   }
 }
 
+/* ============ AGENDA (Fatia 3) ============ */
+let appts=[],agDate=null,curAppt=null;
+const pad=n=>('0'+n).slice(-2);
+const localISO=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
+const timeOf=iso=>{const d=new Date(iso);return pad(d.getHours())+':'+pad(d.getMinutes());};
+const STATUSES=['programada','confirmada','en_consulta','completada','no_show','cancelada'];
+const STL={programada:['Programada','Programada'],confirmada:['Confirmada','Confirmada'],en_consulta:['En consulta','Em consulta'],completada:['Completada','Concluída'],no_show:['No-show','No-show'],cancelada:['Cancelada','Cancelada']};
+const stl=s=>lang==='pt'?(STL[s]||[s,s])[1]:(STL[s]||[s,s])[0];
+function weekOf(dateStr){const d=new Date(dateStr+'T12:00');const dow=(d.getDay()+6)%7;const mon=new Date(d);mon.setDate(d.getDate()-dow);return Array.from({length:7},(_,i)=>{const x=new Date(mon);x.setDate(mon.getDate()+i);return localISO(x);});}
+function apptsOn(dateStr){return appts.filter(a=>a.status!=='cancelada'&&localISO(new Date(a.starts_at))===dateStr).concat(appts.filter(a=>a.status==='cancelada'&&localISO(new Date(a.starts_at))===dateStr)).sort((a,b)=>String(a.starts_at).localeCompare(String(b.starts_at)));}
+function patientOf(a){return patients.find(p=>p.id===a.patient_id);}
+function renderAgenda(){
+  const el=document.getElementById('agBody');if(!el)return;
+  if(!agDate)agDate=localISO(new Date());
+  const week=weekOf(agDate),today=localISO(new Date());
+  const DN=lang==='pt'?['seg','ter','qua','qui','sex','sáb','dom']:['lun','mar','mié','jue','vie','sáb','dom'];
+  document.getElementById('agStrip').innerHTML=week.map((d,i)=>`<div class="day ${d===agDate?'on':''} ${d===today?'today':''}" onclick="agDate='${d}';renderAgenda()"><small>${DN[i]}</small><b>${parseInt(d.slice(8),10)}</b></div>`).join('');
+  document.getElementById('agTitle').textContent=fmtDate(agDate)+(agDate===today?(' · '+L('hoy','hoje')):'');
+  const list=apptsOn(agDate);
+  const unconf=list.filter(a=>a.status==='programada').length;
+  el.innerHTML=(agDate===today&&unconf?`<div class="banner">📋 ${unconf} ${L('cita(s) por confirmar hoy — toca cada una y envía el WhatsApp.','consulta(s) por confirmar hoje — toque em cada uma e envie o WhatsApp.')}</div>`:'')+
+   (list.length?list.map(a=>{const p=patientOf(a);return `<div class="card appt2" onclick="openApptAct('${a.id}')">
+      <div class="at">${timeOf(a.starts_at)}<small>${a.duration_min}min</small></div>
+      <div class="avatar" style="width:38px;height:38px;font-size:14px">${initials(p?p.full_name:'?')}</div>
+      <div style="min-width:0"><div style="font-size:14.5px;font-weight:600">${p?p.full_name:L('(sin paciente)','(sem paciente)')}</div><div style="font-size:12px;color:var(--muted)">${a.treatment||''}</div></div>
+      <span class="stbadge st-${a.status}" style="margin-left:auto">${stl(a.status)}</span></div>`;}).join('')
+    :`<div class="empty">${L('Sin citas este día.','Sem consultas neste dia.')}</div>`);
+}
+function openApptModal(){
+  const sel=document.getElementById('apPatient');
+  sel.innerHTML=patients.map(p=>`<option value="${p.id}">${p.full_name}</option>`).join('');
+  document.getElementById('apTreat').innerHTML=['Valoración'].concat(Object.values(ALL_ITEMS).map(i=>i.name)).map(n=>`<option>${n}</option>`).join('');
+  document.getElementById('apDate').value=agDate||localISO(new Date());
+  document.getElementById('apTime').value='10:00';document.getElementById('apNotes').value='';
+  document.getElementById('ovAppt').classList.add('show');
+}
+async function saveAppt(){
+  const date=document.getElementById('apDate').value,time=document.getElementById('apTime').value;
+  if(!date||!time)return;
+  const rec={patient_id:document.getElementById('apPatient').value||null,
+    starts_at:new Date(date+'T'+time).toISOString(),
+    duration_min:parseInt(document.getElementById('apDur').value,10)||60,
+    treatment:document.getElementById('apTreat').value,notes:document.getElementById('apNotes').value||null,status:'programada'};
+  if(DEMO){appts.push({id:'ap'+Date.now(),...rec});}
+  else{const btn=document.getElementById('saveApptBtn');btn.disabled=true;const{error}=await db.from('appointments').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
+  closeModal('ovAppt');agDate=date;renderAgenda();renderDash();toast(L('Cita creada ✅','Consulta criada ✅'));
+}
+function openApptAct(id){
+  curAppt=appts.find(a=>a.id===id);if(!curAppt)return;
+  const p=patientOf(curAppt);
+  document.getElementById('apActBody').innerHTML=`
+    <h3>${p?p.full_name:L('Cita','Consulta')} · ${timeOf(curAppt.starts_at)}</h3>
+    <div class="muted" style="font-size:12.5px;margin:-6px 0 14px">${fmtDate(curAppt.starts_at)} · ${curAppt.treatment||''} · ${curAppt.duration_min}min</div>
+    ${p&&p.phone?`<button class="wa" style="width:100%;justify-content:center;margin-bottom:8px" onclick="waConfirm()">💬 ${L('Confirmar por WhatsApp','Confirmar por WhatsApp')}</button>`:''}
+    <button class="btn ghost full" style="margin-bottom:8px" onclick="icsDownload()">📅 ${L('Agregar a mi calendario (.ics)','Adicionar ao meu calendário (.ics)')}</button>
+    ${p?`<button class="btn ghost full" style="margin-bottom:14px" onclick="closeModal('ovApptAct');openDetail('${p.id}')">☺ ${L('Ver paciente','Ver paciente')}</button>`:''}
+    <label style="font-size:12px;color:var(--muted)">${L('Estado','Status')}</label>
+    <div class="stbtns">${STATUSES.map(s=>`<button class="${curAppt.status===s?'on':''}" onclick="setApptStatus('${s}')">${stl(s)}</button>`).join('')}</div>`;
+  document.getElementById('ovApptAct').classList.add('show');
+}
+async function setApptStatus(s){
+  if(!curAppt)return;curAppt.status=s;
+  if(!DEMO){const{error}=await db.from('appointments').update({status:s}).eq('id',curAppt.id);if(error){alert(error.message);return;}}
+  openApptAct(curAppt.id);renderAgenda();
+}
+function gcalFor(a){
+  const st=new Date(a.starts_at),en=new Date(st.getTime()+(a.duration_min||60)*60000);
+  const f=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Harmony Clinic · '+(a.treatment||'Cita'))+'&dates='+f(st)+'/'+f(en)+'&location='+encodeURIComponent('Calle Querétaro 27, Consultorio 102, Roma Norte, CDMX')+'&details='+encodeURIComponent('Tu cita en Harmony Clinic ✨');
+}
+function waConfirm(){
+  const p=patientOf(curAppt);if(!p||!p.phone)return;
+  let d=(p.phone||'').replace(/\D/g,'');if(d.length===10)d='52'+d;
+  const msg='Hola '+(p.full_name||'').split(' ')[0]+' ✨ Te confirmamos tu cita en Harmony Clinic el '+fmtDate(curAppt.starts_at)+' a las '+timeOf(curAppt.starts_at)+' ('+(curAppt.treatment||'valoración')+'). Responde SÍ para confirmar 💛 Agrégala a tu calendario: '+gcalFor(curAppt);
+  window.open('https://wa.me/'+d+'?text='+encodeURIComponent(msg),'_blank');
+}
+function icsDownload(){
+  const p=patientOf(curAppt);
+  const st=new Date(curAppt.starts_at),en=new Date(st.getTime()+(curAppt.duration_min||60)*60000);
+  const f=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
+  const ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//HarmonyOS//ES\r\nBEGIN:VEVENT\r\nUID:'+curAppt.id+'@harmonyos\r\nDTSTAMP:'+f(new Date())+'\r\nDTSTART:'+f(st)+'\r\nDTEND:'+f(en)+'\r\nSUMMARY:Harmony Clinic · '+(p?p.full_name:'Cita')+'\r\nDESCRIPTION:'+(curAppt.treatment||'')+'\r\nLOCATION:Calle Querétaro 27\\, Consultorio 102\\, Roma Norte\\, CDMX\r\nEND:VEVENT\r\nEND:VCALENDAR';
+  const b=new Blob([ics],{type:'text/calendar'});const u=URL.createObjectURL(b);
+  const l=document.createElement('a');l.href=u;l.download='harmony-cita.ics';l.click();URL.revokeObjectURL(u);
+}
+
 /* ============ START ============ */
 (async()=>{
   setLang('es');
   if(DEMO){
     patients=[{id:'d1',full_name:'Juliana Silva',vip:true,birth_date:'1993-05-21',phone:'55 1234 5678',skin_type:'Mixta',allergies:'Ninguna',
       procedures:[{name:'Toxina Full Face',product:'Dysport · Lote DY123',value_cents:590000,performed_at:'2026-03-15'},{name:'Rejuran rostro',product:'Rejuran',value_cents:890000,performed_at:'2025-11-02'}]}];
+    const _n=new Date(),_t1=new Date(_n),_t2=new Date(_n);
+    _t1.setHours(16,0,0,0);_t2.setDate(_n.getDate()+1);_t2.setHours(11,0,0,0);
+    appts=[{id:'ap1',patient_id:'d1',starts_at:_t1.toISOString(),duration_min:60,treatment:'Toxina Full Face',status:'programada'},
+           {id:'ap2',patient_id:'d1',starts_at:_t2.toISOString(),duration_min:45,treatment:'Valoración',status:'confirmada'}];
     await onLogin('Demo');return;
   }
   if(!db){document.getElementById('loginMsg').className='msg err';document.getElementById('loginMsg').textContent='Falha ao carregar. Verifique a internet.';return;}
