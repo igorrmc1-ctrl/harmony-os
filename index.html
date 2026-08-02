@@ -3,237 +3,471 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>Harmony OS — Fatia 1</title>
+<title>Harmony OS</title>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
   :root{--bg:#0E0E12;--surface:#16161C;--surface2:#1E1E26;--border:#2A2A34;--rose:#C97B8E;--rose2:#E8A0B4;--gold:#C9A66B;--green:#8FC7A1;--text:#F4F4F7;--muted:#8A8A96;--radius:16px;}
   *{box-sizing:border-box;margin:0;padding:0;}
-  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;display:flex;min-height:100vh;min-height:100dvh;}
-  a{color:inherit;text-decoration:none;} .muted{color:var(--muted);} .green{color:var(--green);}
-  input,select,textarea{font-family:inherit;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;}
+  input,select,button,textarea{font-family:inherit;}
+  .muted{color:var(--muted);}
+  /* ---------- LOGIN ---------- */
+  #login{min-height:100vh;min-height:100dvh;display:grid;place-items:center;padding:20px;}
+  .loginbox{width:100%;max-width:380px;text-align:center;}
+  .logo-big{width:64px;height:64px;border-radius:50%;border:2px solid var(--gold);display:grid;place-items:center;color:var(--gold);font-weight:700;font-size:28px;margin:0 auto 18px;}
+  .loginbox h1{font-size:22px;font-weight:600;letter-spacing:2px;margin-bottom:4px;} .loginbox h1 span{color:var(--gold);}
+  .loginbox p{color:var(--muted);font-size:13px;margin-bottom:24px;}
+  .lfield{text-align:left;margin-bottom:13px;}
+  .lfield label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;}
+  .lfield input{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:11px;padding:13px;color:var(--text);font-size:15px;outline:none;}
+  .lfield input:focus{border-color:var(--rose);}
+  .btn{background:var(--rose);color:#fff;border:none;border-radius:12px;padding:12px 16px;font-size:14px;font-weight:600;cursor:pointer;}
+  .btn.full{width:100%;} .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text);}
+  .btn.sm{padding:8px 12px;font-size:13px;border-radius:10px;}
+  .btn:disabled{opacity:.5;cursor:default;}
+  .toggle-auth{margin-top:16px;font-size:13px;color:var(--muted);} .toggle-auth a{color:var(--rose2);cursor:pointer;}
+  .msg{font-size:13px;margin-top:14px;min-height:18px;} .msg.err{color:#E88;} .msg.ok{color:var(--green);}
+  /* ---------- APP ---------- */
+  #app{display:none;}
+  .layout{display:flex;min-height:100vh;min-height:100dvh;}
   .sidebar{width:230px;background:#101015;border-right:1px solid var(--border);padding:22px 14px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;position:sticky;top:0;height:100vh;height:100dvh;}
   .brand{display:flex;align-items:center;gap:10px;padding:6px 10px 22px;}
   .brand .logo{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--gold);display:grid;place-items:center;color:var(--gold);font-weight:700;}
   .brand b{font-weight:600;letter-spacing:2px;font-size:15px;} .brand b span{color:var(--gold);}
-  .nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;color:var(--muted);font-size:14.5px;font-weight:500;cursor:pointer;transition:.15s;}
-  .nav a:hover{background:var(--surface);color:var(--text);}
-  .nav a.active{background:linear-gradient(90deg,rgba(201,123,142,.22),rgba(201,123,142,.06));color:var(--text);border:1px solid rgba(201,123,142,.25);}
+  .nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;color:var(--muted);font-size:14.5px;font-weight:500;cursor:pointer;}
+  .nav a:hover{background:var(--surface);color:var(--text);} .nav a.active{background:linear-gradient(90deg,rgba(201,123,142,.22),rgba(201,123,142,.06));color:var(--text);border:1px solid rgba(201,123,142,.25);}
   .nav a .ic{width:19px;text-align:center;}
-  .side-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 8px;border-top:1px solid var(--border);}
+  .side-foot{margin-top:auto;padding:12px 8px;border-top:1px solid var(--border);}
+  .side-foot .who{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
   .avatar{border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--gold));display:grid;place-items:center;font-weight:600;color:#1a1a1a;flex-shrink:0;width:36px;height:36px;font-size:14px;}
+  .logout{font-size:12px;color:var(--muted);cursor:pointer;}
   .main{flex:1;display:flex;flex-direction:column;min-width:0;}
-  .topbar{display:flex;align-items:center;gap:16px;padding:16px 26px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(14,14,18,.85);backdrop-filter:blur(12px);z-index:20;}
-  .search{flex:1;max-width:440px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px;}
+  .topbar{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(14,14,18,.85);backdrop-filter:blur(12px);z-index:20;}
+  .search{flex:1;max-width:440px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:9px 14px;}
   .search input{background:none;border:none;outline:none;color:var(--text);font-size:14px;width:100%;}
-  .top-actions{display:flex;align-items:center;gap:14px;margin-left:auto;}
-  .lang{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;font-size:12.5px;font-weight:600;}
+  .lang{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;font-size:12.5px;font-weight:600;margin-left:auto;}
   .lang button{background:transparent;color:var(--muted);border:none;padding:7px 12px;cursor:pointer;} .lang button.on{background:var(--rose);color:#fff;}
-  .content{padding:26px;overflow-y:auto;}
-  .page-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:22px;}
-  .page-head h1{font-size:25px;font-weight:600;}
-  .btn{background:var(--rose);color:#fff;border:none;border-radius:12px;padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;}
-  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text);} .btn.full{width:100%;}
+  .content{padding:24px;overflow-y:auto;}
+  .page-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
+  .page-head h1{font-size:24px;font-weight:600;}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
-  .grid{display:grid;gap:16px;} .kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:8px;}
+  .grid{display:grid;gap:14px;} .kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:8px;}
   .kpi .k-top{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;margin-bottom:10px;}
   .kpi .k-ic{width:30px;height:30px;border-radius:9px;background:var(--surface2);display:grid;place-items:center;font-size:15px;}
-  .kpi .k-val{font-size:25px;font-weight:650;letter-spacing:-.5px;} .kpi .k-sub{font-size:12.5px;margin-top:6px;}
-  /* patient list */
-  .plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
-  .pcard{display:flex;align-items:center;gap:13px;cursor:pointer;transition:.15s;}
-  .pcard:hover{border-color:var(--rose);} .pcard .avatar{width:46px;height:46px;font-size:17px;}
+  .kpi .k-val{font-size:24px;font-weight:650;letter-spacing:-.5px;}
+  .plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:13px;}
+  .pcard{display:flex;align-items:center;gap:13px;cursor:pointer;} .pcard:hover{border-color:var(--rose);} .pcard .avatar{width:46px;height:46px;font-size:17px;}
   .pcard .nm{font-size:15px;font-weight:600;} .pcard .mt{font-size:12.5px;color:var(--muted);margin-top:2px;}
-  .vip{background:var(--gold);color:#1a1a1a;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:5px;vertical-align:middle;margin-left:6px;}
+  .vip{background:var(--gold);color:#1a1a1a;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:5px;margin-left:6px;}
   .chip{margin-left:auto;text-align:right;} .chip b{font-size:13px;} .chip small{display:block;color:var(--muted);font-size:11px;}
-  /* detail */
-  .phead{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
-  .phead .avatar{width:64px;height:64px;font-size:22px;}
-  .facts{display:flex;gap:22px;flex-wrap:wrap;margin-left:auto;}
-  .fact small{color:var(--muted);font-size:11px;display:block;} .fact b{font-size:14px;font-weight:600;}
-  .section-t{font-size:15px;font-weight:600;margin:22px 0 14px;display:flex;justify-content:space-between;align-items:center;}
-  .proc{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
-  .proc:last-child{border-bottom:none;} .proc .dot{width:10px;height:10px;border-radius:50%;background:var(--rose);flex-shrink:0;}
-  .proc .pn{font-size:14px;font-weight:500;} .proc .pd{font-size:12px;color:var(--muted);}
-  .proc .pv{margin-left:auto;font-size:14px;font-weight:600;}
+  .phead{display:flex;align-items:center;gap:16px;flex-wrap:wrap;} .phead .avatar{width:60px;height:60px;font-size:21px;}
+  .facts{display:flex;gap:20px;flex-wrap:wrap;margin-left:auto;} .fact small{color:var(--muted);font-size:11px;display:block;} .fact b{font-size:14px;font-weight:600;}
+  .section-t{font-size:15px;font-weight:600;margin:20px 0 12px;display:flex;justify-content:space-between;align-items:center;gap:10px;}
+  .proc{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);} .proc:last-child{border-bottom:none;}
+  .proc .dot{width:10px;height:10px;border-radius:50%;background:var(--rose);flex-shrink:0;} .proc .pn{font-size:14px;font-weight:500;} .proc .pd{font-size:12px;color:var(--muted);} .proc .pv{margin-left:auto;font-size:14px;font-weight:600;white-space:nowrap;}
   .back{color:var(--muted);font-size:13px;cursor:pointer;display:inline-flex;gap:6px;margin-bottom:14px;}
-  /* modal */
-  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;place-items:center;z-index:60;padding:18px;}
-  .overlay.show{display:grid;} .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;width:100%;max-width:440px;}
-  .modal h3{font-size:18px;margin-bottom:16px;} .field{margin-bottom:13px;}
-  .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;}
-  .field input,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;outline:none;}
-  .field input:focus,.field select:focus{border-color:var(--rose);}
+  /* ---------- COTIZADOR ---------- */
+  .cot-wrap{display:grid;grid-template-columns:1fr 360px;gap:16px;align-items:start;}
+  .cat-block{margin-bottom:6px;}
+  .cat-head{display:flex;align-items:baseline;gap:8px;padding:14px 0 8px;}
+  .cat-head b{font-size:14.5px;} .cat-head small{color:var(--gold);font-size:11.5px;}
+  .cat-item{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);}
+  .cat-item:last-child{border-bottom:none;}
+  .cat-item .cn{font-size:13.5px;font-weight:500;} .cat-item .cd{font-size:11.5px;color:var(--muted);}
+  .cat-item .cp{margin-left:auto;font-size:13px;font-weight:600;white-space:nowrap;} .cat-item .cp small{color:var(--muted);font-weight:400;font-size:10px;}
+  .addbtn{width:30px;height:30px;border-radius:50%;background:rgba(201,123,142,.15);border:1px solid rgba(201,123,142,.4);color:var(--rose2);font-size:17px;cursor:pointer;flex-shrink:0;line-height:1;}
+  .cart{position:sticky;top:78px;}
+  .cart-line{display:flex;align-items:center;gap:8px;padding:9px 0;border-bottom:1px solid var(--border);}
+  .cart-line .ln{flex:1;min-width:0;} .cart-line .ln b{font-size:13px;display:block;} .cart-line .ln small{color:var(--muted);font-size:11px;}
+  .qty{display:flex;align-items:center;gap:6px;}
+  .qty button{width:24px;height:24px;border-radius:7px;background:var(--surface2);border:1px solid var(--border);color:var(--text);cursor:pointer;font-size:13px;line-height:1;}
+  .qty span{font-size:13px;min-width:16px;text-align:center;}
+  .cart-line .lp{font-size:13px;font-weight:600;white-space:nowrap;}
+  .rm{color:var(--muted);cursor:pointer;font-size:15px;padding:0 2px;}
+  .tot-row{display:flex;justify-content:space-between;font-size:13.5px;padding:5px 0;}
+  .tot-row.grand{font-size:18px;font-weight:700;padding-top:10px;} .tot-row.grand .v{color:var(--rose2);}
+  .fieldset{margin-top:12px;}
+  .fieldset label{display:block;font-size:12px;color:var(--muted);margin-bottom:6px;}
+  .fieldset input,.fieldset select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:10px 12px;color:var(--text);font-size:13.5px;outline:none;}
+  .fieldset input:focus,.fieldset select:focus{border-color:var(--rose);}
+  .disc-quick{display:flex;gap:6px;margin-top:6px;}
+  .disc-quick button{flex:1;background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:8px;padding:6px;font-size:12px;cursor:pointer;}
+  .disc-quick button.on{border-color:var(--rose);color:var(--rose2);}
+  .quote-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:13px;}
+  .quote-row:last-child{border-bottom:none;}
+  .quote-row .qd{color:var(--muted);font-size:12px;} .quote-row .qt{margin-left:auto;font-weight:600;}
+  .stag{font-size:10.5px;padding:2px 8px;border-radius:12px;background:rgba(201,166,107,.15);color:var(--gold);}
+  .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--green);color:var(--green);padding:10px 18px;border-radius:12px;font-size:13.5px;z-index:80;display:none;}
+  .empty{color:var(--muted);font-size:13px;padding:12px 0;}
+  /* modals */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;place-items:center;z-index:60;padding:18px;} .overlay.show{display:grid;}
+  .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;width:100%;max-width:440px;max-height:88vh;overflow-y:auto;} .modal h3{font-size:17px;margin-bottom:14px;}
+  .field{margin-bottom:12px;} .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;}
+  .field input,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;outline:none;} .field input:focus,.field select:focus{border-color:var(--rose);}
   .modal-actions{display:flex;gap:10px;margin-top:8px;} .modal-actions .btn{flex:1;}
-  .badge-demo{position:fixed;bottom:14px;right:14px;background:var(--surface2);border:1px solid var(--gold);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;z-index:50;}
   .view{display:none;} .view.show{display:block;}
   .mobilenav{display:none;}
+  @media(max-width:900px){
+    .cot-wrap{grid-template-columns:1fr;} .cart{position:static;}
+  }
   @media(max-width:820px){
-    body{flex-direction:column;} .sidebar{display:none;} .facts{margin-left:0;}
-    .content{padding:16px;padding-bottom:82px;} .topbar{padding:13px 15px;} .search{max-width:none;}
-    .page-head h1{font-size:21px;} .plist{grid-template-columns:1fr;}
-    .mobilenav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#101015;border-top:1px solid var(--border);padding:10px 0 calc(10px + env(safe-area-inset-bottom));z-index:40;}
+    .sidebar{display:none;} .facts{margin-left:0;} .content{padding:16px;padding-bottom:86px;} .topbar{padding:12px 14px;} .page-head h1{font-size:21px;} .plist{grid-template-columns:1fr;}
+    .mobilenav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#101015;border-top:1px solid var(--border);padding:9px 0 calc(9px + env(safe-area-inset-bottom));z-index:40;}
     .mobilenav a{flex:1;text-align:center;color:var(--muted);font-size:10.5px;cursor:pointer;} .mobilenav a .ic{display:block;font-size:19px;margin-bottom:3px;} .mobilenav a.active{color:var(--rose2);}
   }
 </style>
 </head>
 <body>
-  <aside class="sidebar">
-    <div class="brand"><div class="logo">H</div><b>HARMONY <span>OS</span></b></div>
-    <nav class="nav">
-      <a data-view="dash"><span class="ic">▤</span><span data-i18n="nav_dash">Dashboard</span></a>
-      <a class="active" data-view="pac"><span class="ic">☺</span><span data-i18n="nav_pac">Pacientes</span></a>
-      <a data-view="soon"><span class="ic">▦</span><span data-i18n="nav_age">Agenda</span></a>
-      <a data-view="soon"><span class="ic">✦</span><span data-i18n="nav_cot">Cotizador</span></a>
-      <a data-view="soon"><span class="ic">$</span><span data-i18n="nav_fin">Financeiro</span></a>
-      <a data-view="soon"><span class="ic">⚙</span><span data-i18n="nav_cfg">Configurações</span></a>
-    </nav>
-    <div class="side-foot"><div class="avatar">I</div><div><div style="font-size:13px;font-weight:600">Dra. Isabella</div><div class="muted" style="font-size:11px" data-i18n="role">Administradora</div></div></div>
-  </aside>
-
-  <div class="main">
-    <div class="topbar">
-      <div class="search">🔍<input id="q" data-i18n-ph="search" placeholder="Buscar paciente..." oninput="renderPatients()"></div>
-      <div class="top-actions">
-        <div class="lang"><button id="pt" class="on" onclick="setLang('pt')">PT</button><button id="es" onclick="setLang('es')">ES</button></div>
-        <div class="avatar" style="width:34px;height:34px;font-size:13px">I</div>
-      </div>
+  <!-- LOGIN -->
+  <div id="login">
+    <div class="loginbox">
+      <div class="logo-big">H</div>
+      <h1>HARMONY <span>OS</span></h1>
+      <p id="loginSub">Entre para acessar a sua clínica</p>
+      <div class="lfield"><label id="lblEmail">E-mail</label><input id="email" type="email" autocomplete="email"></div>
+      <div class="lfield"><label id="lblPass">Senha</label><input id="password" type="password" autocomplete="current-password"></div>
+      <button class="btn full" id="authBtn" onclick="doAuth()">Entrar</button>
+      <div class="toggle-auth" id="toggleAuth">Primeira vez? <a onclick="toggleMode()">Criar conta</a></div>
+      <div class="msg" id="loginMsg"></div>
     </div>
+  </div>
 
-    <div class="content">
-      <!-- DASHBOARD -->
-      <div id="dash" class="view">
-        <div class="page-head"><h1><span data-i18n="hi">Bem-vinda</span>, Dra. Isabella 👋</h1></div>
-        <div class="grid kpis">
-          <div class="card kpi"><div class="k-top"><div class="k-ic">☺</div><span data-i18n="k_act">Pacientes ativos</span></div><div class="k-val" id="kpiPatients">0</div></div>
-          <div class="card kpi"><div class="k-top"><div class="k-ic">◈</div><span data-i18n="k_proc">Procedimentos</span></div><div class="k-val" id="kpiProcs">0</div></div>
-          <div class="card kpi"><div class="k-top"><div class="k-ic">▦</div><span data-i18n="k_rev">Receita total</span></div><div class="k-val" id="kpiRev">R$ 0</div></div>
-          <div class="card kpi"><div class="k-top"><div class="k-ic">✦</div><span data-i18n="k_tick">Ticket médio</span></div><div class="k-val" id="kpiTicket">R$ 0</div></div>
+  <!-- APP -->
+  <div id="app">
+   <div class="layout">
+    <aside class="sidebar">
+      <div class="brand"><div class="logo">H</div><b>HARMONY <span>OS</span></b></div>
+      <nav class="nav">
+        <a data-view="dash"><span class="ic">▤</span><span data-i18n="nav_dash">Dashboard</span></a>
+        <a class="active" data-view="pac"><span class="ic">☺</span><span data-i18n="nav_pac">Pacientes</span></a>
+        <a data-view="cot"><span class="ic">✦</span><span data-i18n="nav_cot">Cotizador</span></a>
+        <a data-view="soon"><span class="ic">▦</span><span data-i18n="nav_age">Agenda</span></a>
+      </nav>
+      <div class="side-foot"><div class="who"><div class="avatar" id="userAv">·</div><div><div id="userName" style="font-size:13px;font-weight:600">—</div><div class="muted" style="font-size:11px" data-i18n="role">Administradora</div></div></div><div class="logout" onclick="doLogout()" data-i18n="logout">Sair</div></div>
+    </aside>
+    <div class="main">
+      <div class="topbar">
+        <div class="search">🔍<input id="q" placeholder="Buscar paciente..." data-i18n-ph="search" oninput="renderPatients()"></div>
+        <div class="lang"><button id="pt" class="on" onclick="setLang('pt')">PT</button><button id="es" onclick="setLang('es')">ES</button></div>
+      </div>
+      <div class="content">
+        <!-- DASH -->
+        <div id="dash" class="view">
+          <div class="page-head"><h1><span data-i18n="hi">Bem-vinda</span> 👋</h1></div>
+          <div class="grid kpis">
+            <div class="card kpi"><div class="k-top"><div class="k-ic">☺</div><span data-i18n="k_act">Pacientes</span></div><div class="k-val" id="kpiPatients">0</div></div>
+            <div class="card kpi"><div class="k-top"><div class="k-ic">◈</div><span data-i18n="k_proc">Procedimentos</span></div><div class="k-val" id="kpiProcs">0</div></div>
+            <div class="card kpi"><div class="k-top"><div class="k-ic">▦</div><span data-i18n="k_rev">Receita</span></div><div class="k-val" id="kpiRev">$0</div></div>
+            <div class="card kpi"><div class="k-top"><div class="k-ic">✦</div><span data-i18n="k_quotes">Cotizações</span></div><div class="k-val" id="kpiQuotes">0</div></div>
+          </div>
+        </div>
+
+        <!-- PACIENTES -->
+        <div id="pac" class="view show">
+          <div class="page-head"><h1 data-i18n="patients">Pacientes</h1><button class="btn" onclick="openPatientModal()">+ <span data-i18n="new_pat">Novo paciente</span></button></div>
+          <div class="plist" id="plist"></div>
+          <div class="empty" id="plistEmpty" style="display:none" data-i18n="no_pat">Nenhum paciente ainda. Clique em "Novo paciente" para começar.</div>
+        </div>
+
+        <!-- DETALHE -->
+        <div id="detail" class="view">
+          <div class="back" onclick="show('pac')">← <span data-i18n="back">Voltar</span></div>
+          <div class="card" id="detailCard"></div>
+        </div>
+
+        <!-- COTIZADOR -->
+        <div id="cot" class="view">
+          <div class="page-head"><h1 data-i18n="quoter">Cotizador</h1></div>
+          <div class="cot-wrap">
+            <div class="card" id="catalogPanel"></div>
+            <div class="card cart">
+              <div class="section-t" style="margin-top:0"><span data-i18n="quote">Cotização</span><a style="font-size:12px;color:var(--rose2);cursor:pointer" onclick="clearCart()" data-i18n="clear">Limpar</a></div>
+              <div class="fieldset"><label data-i18n="f_patient">Paciente</label><select id="qPatient"></select></div>
+              <div id="cartLines"><div class="empty" data-i18n="cart_empty">Toque em + nos tratamentos para montar a proposta.</div></div>
+              <div class="fieldset"><label data-i18n="f_disc">Desconto (MXN)</label><input id="qDisc" type="number" min="0" value="0" oninput="discPct=null;renderCart()">
+                <div class="disc-quick" id="discQuick">
+                  <button onclick="setDiscPct(5)">5%</button><button onclick="setDiscPct(10)">10%</button><button onclick="setDiscPct(15)">15%</button>
+                </div></div>
+              <div class="fieldset" id="discReasonWrap" style="display:none"><label data-i18n="f_reason">Motivo do desconto</label><input id="qReason" placeholder="Ex.: paquete, cortesía, negociación"></div>
+              <div class="fieldset"><label data-i18n="f_pay">Forma de pagamento</label><select id="qPay">
+                <option value="efectivo">Efectivo</option><option value="debito">Tarjeta de débito</option><option value="transferencia">Transferencia</option>
+                <option value="credito">Tarjeta de crédito (1x)</option><option value="credito-3msi">Crédito · 3 MSI</option>
+              </select></div>
+              <div style="margin-top:14px">
+                <div class="tot-row"><span data-i18n="subtotal">Subtotal</span><span id="tSub">$0</span></div>
+                <div class="tot-row"><span data-i18n="discount">Desconto</span><span id="tDisc" style="color:var(--rose2)">−$0</span></div>
+                <div class="tot-row grand"><span>Total</span><span class="v" id="tTotal">$0 MXN</span></div>
+                <div class="muted" id="tMsi" style="font-size:11.5px;text-align:right;min-height:15px"></div>
+              </div>
+              <button class="btn full" id="saveQuoteBtn" style="margin-top:12px" onclick="saveQuote()" data-i18n="save_quote">Guardar cotização</button>
+            </div>
+          </div>
+        </div>
+
+        <!-- EM BREVE -->
+        <div id="soon" class="view">
+          <div class="card" style="text-align:center;padding:50px"><div style="font-size:34px">▦</div><h1 style="font-size:20px;margin:12px 0 6px" data-i18n="soon_t">Em construção</h1><p class="muted" data-i18n="soon_d">A Agenda entra na próxima fatia.</p></div>
         </div>
       </div>
-
-      <!-- PACIENTES -->
-      <div id="pac" class="view show">
-        <div class="page-head"><h1 data-i18n="patients">Pacientes</h1><button class="btn" onclick="openPatientModal()">+ <span data-i18n="new_pat">Novo paciente</span></button></div>
-        <div class="plist" id="plist"></div>
-      </div>
-
-      <!-- DETALHE -->
-      <div id="detail" class="view">
-        <div class="back" onclick="show('pac')">← <span data-i18n="back">Voltar</span></div>
-        <div class="card" id="detailCard"></div>
-      </div>
-
-      <!-- EM BREVE -->
-      <div id="soon" class="view">
-        <div class="card" style="text-align:center;padding:50px"><div style="font-size:34px">✦</div><h1 style="font-size:20px;margin:12px 0 6px" data-i18n="soon_t">Em construção</h1><p class="muted" data-i18n="soon_d">Esta seção entra nas próximas fatias (Agenda, Cotizador…).</p></div>
-      </div>
     </div>
+   </div>
+   <nav class="mobilenav">
+     <a data-view="dash"><span class="ic">▤</span><span data-i18n="nav_dash">Dashboard</span></a>
+     <a class="active" data-view="pac"><span class="ic">☺</span><span data-i18n="nav_pac">Pacientes</span></a>
+     <a data-view="cot"><span class="ic">✦</span><span data-i18n="nav_cot">Cotizador</span></a>
+     <a data-view="soon"><span class="ic">▦</span><span data-i18n="nav_age">Agenda</span></a>
+   </nav>
   </div>
 
-  <nav class="mobilenav">
-    <a data-view="dash"><span class="ic">▤</span><span data-i18n="nav_dash">Dashboard</span></a>
-    <a class="active" data-view="pac"><span class="ic">☺</span><span data-i18n="nav_pac">Pacientes</span></a>
-    <a data-view="soon"><span class="ic">▦</span><span data-i18n="nav_age">Agenda</span></a>
-    <a data-view="soon"><span class="ic">✦</span><span data-i18n="nav_cot">Cotizador</span></a>
-  </nav>
+  <!-- Modais -->
+  <div class="overlay" id="ovPatient"><div class="modal"><h3 data-i18n="new_pat">Novo paciente</h3>
+    <div class="field"><label data-i18n="f_name">Nome</label><input id="npName"></div>
+    <div class="field"><label data-i18n="f_birth">Nascimento</label><input id="npBirth" type="date"></div>
+    <div class="field"><label data-i18n="f_phone">Telefone</label><input id="npPhone"></div>
+    <div class="field"><label data-i18n="f_skin">Tipo de pele</label><select id="npSkin"><option>Normal</option><option>Mixta</option><option>Grasa</option><option>Seca</option><option>Sensible</option></select></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovPatient')" data-i18n="cancel">Cancelar</button><button class="btn" id="savePatBtn" onclick="savePatient()" data-i18n="save">Salvar</button></div></div></div>
 
-  <!-- Modal: novo paciente -->
-  <div class="overlay" id="ovPatient">
-    <div class="modal">
-      <h3 data-i18n="new_pat">Novo paciente</h3>
-      <div class="field"><label data-i18n="f_name">Nome</label><input id="npName"></div>
-      <div class="field"><label data-i18n="f_birth">Nascimento</label><input id="npBirth" placeholder="dd/mm/aaaa"></div>
-      <div class="field"><label data-i18n="f_phone">Telefone</label><input id="npPhone"></div>
-      <div class="field"><label data-i18n="f_skin">Tipo de pele</label>
-        <select id="npSkin"><option>Normal</option><option>Mista</option><option>Oleosa</option><option data-i18n="skin_dry">Seca</option><option data-i18n="skin_sens">Sensível</option></select></div>
-      <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovPatient')" data-i18n="cancel">Cancelar</button><button class="btn" onclick="savePatient()" data-i18n="save">Salvar</button></div>
-    </div>
-  </div>
+  <div class="overlay" id="ovProc"><div class="modal"><h3 data-i18n="new_proc">Registrar procedimento</h3>
+    <div class="field"><label data-i18n="f_proc">Procedimento</label><select id="prName"></select></div>
+    <div class="field"><label data-i18n="f_product">Produto / marca</label><input id="prProduct" placeholder="Dysport, Sculptra..."></div>
+    <div class="field"><label data-i18n="f_lot">Lote</label><input id="prLot" placeholder="Lote do produto"></div>
+    <div class="field"><label data-i18n="f_value">Valor (MXN)</label><input id="prValue" type="number"></div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovProc')" data-i18n="cancel">Cancelar</button><button class="btn" id="saveProcBtn" onclick="saveProc()" data-i18n="save">Salvar</button></div></div></div>
 
-  <!-- Modal: novo procedimento -->
-  <div class="overlay" id="ovProc">
-    <div class="modal">
-      <h3 data-i18n="new_proc">Registrar procedimento</h3>
-      <div class="field"><label data-i18n="f_proc">Procedimento</label>
-        <select id="prName"><option>Botox</option><option data-i18n="p_fill">Preenchimento</option><option>Skinbooster</option><option data-i18n="p_bio">Bioestimulador</option><option>Fios de PDO</option></select></div>
-      <div class="field"><label data-i18n="f_product">Produto</label><input id="prProduct" placeholder="Dysport, Sculptra..."></div>
-      <div class="field"><label data-i18n="f_value">Valor (R$)</label><input id="prValue" type="number" placeholder="1690"></div>
-      <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovProc')" data-i18n="cancel">Cancelar</button><button class="btn" onclick="saveProc()" data-i18n="save">Salvar</button></div>
-    </div>
-  </div>
-
-  <div class="badge-demo">● <span data-i18n="demo">Modo demo — dados na memória</span></div>
+  <div class="toast" id="toast"></div>
 
 <script>
-/* ---------- STORE (camada isolada: troca por Supabase depois) ---------- */
-const store = {
-  patients: [
-    {id:1,name:'Juliana Silva',vip:true,birth:'21/05/1993',phone:'(11) 98765-4321',skin:'Mista',allergy:'Nenhuma',pref:'Natural',
-      procs:[{name:'Botox',product:'Toxina Botulínica',value:1200,date:'05/01/24'},{name:'Preenchimento',product:'Ácido Hialurônico',value:2500,date:'20/03/24'},{name:'Skinbooster',product:'Profhilo',value:1800,date:'10/07/24'},{name:'Bioestimulador',product:'Sculptra',value:2800,date:'25/09/24'},{name:'Botox',product:'Dysport',value:1200,date:'15/03/25'}]},
-    {id:2,name:'Fernanda Lima',vip:false,birth:'12/09/1988',phone:'(11) 97654-3210',skin:'Oleosa',allergy:'Nenhuma',pref:'Natural',
-      procs:[{name:'Preenchimento',product:'Revofil Ultra',value:2890,date:'02/02/25'}]},
-    {id:3,name:'Carolina Souza',vip:false,birth:'30/11/1995',phone:'(11) 96543-2109',skin:'Normal',allergy:'Nenhuma',pref:'—',
-      procs:[{name:'Skinbooster',product:'Profhilo',value:1890,date:'18/04/25'}]},
-  ],
-  nextId:4,
-  addPatient(p){p.id=this.nextId++;p.procs=[];p.vip=false;this.patients.push(p);},
-  addProc(pid,proc){const p=this.patients.find(x=>x.id===pid);if(p)p.procs.unshift(proc);},
-  stats(){let procs=0,rev=0;this.patients.forEach(p=>p.procs.forEach(pr=>{procs++;rev+=pr.value;}));return{patients:this.patients.length,procs,rev,ticket:procs?Math.round(rev/procs):0};}
-};
-let currentPatient=null, lang='pt';
-const money=v=>'R$ '+v.toLocaleString('pt-BR');
-const initials=n=>n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+/* ============ CONFIG ============ */
+const SUPABASE_URL='https://lxcllodivejmyzknfkfh.supabase.co';
+const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4Y2xsb2RpdmVqbXl6a25ma2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2Nzk4NjEsImV4cCI6MjEwMTI1NTg2MX0.2EBeQwvEb8GSYgQAWDTWwyV9V1hSMMgfvMgfSaWy79M';
+const DEMO=new URLSearchParams(location.search).has('demo');
+let db=null; if(!DEMO){ try{ db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);}catch(e){console.error(e);} }
 
-/* ---------- i18n ---------- */
-const T={pt:{nav_dash:'Dashboard',nav_pac:'Pacientes',nav_age:'Agenda',nav_cot:'Cotizador',nav_fin:'Financeiro',nav_cfg:'Configurações',role:'Administradora',search:'Buscar paciente...',hi:'Bem-vinda',k_act:'Pacientes ativos',k_proc:'Procedimentos',k_rev:'Receita total',k_tick:'Ticket médio',patients:'Pacientes',new_pat:'Novo paciente',back:'Voltar',new_proc:'Registrar procedimento',f_name:'Nome',f_birth:'Nascimento',f_phone:'Telefone',f_skin:'Tipo de pele',f_proc:'Procedimento',f_product:'Produto',f_value:'Valor (R$)',cancel:'Cancelar',save:'Salvar',skin_dry:'Seca',skin_sens:'Sensível',p_fill:'Preenchimento',p_bio:'Bioestimulador',demo:'Modo demo — dados na memória',soon_t:'Em construção',soon_d:'Esta seção entra nas próximas fatias (Agenda, Cotizador…).',skin:'Tipo de pele',allergy:'Alergias',pref:'Preferências',tl:'Histórico de tratamentos',add_proc:'+ Procedimento',procs_n:'procedimentos',since:'Cliente'},
-       es:{nav_dash:'Panel',nav_pac:'Pacientes',nav_age:'Agenda',nav_cot:'Cotizador',nav_fin:'Finanzas',nav_cfg:'Configuración',role:'Administradora',search:'Buscar paciente...',hi:'Bienvenida',k_act:'Pacientes activos',k_proc:'Procedimientos',k_rev:'Ingresos totales',k_tick:'Ticket promedio',patients:'Pacientes',new_pat:'Nuevo paciente',back:'Volver',new_proc:'Registrar procedimiento',f_name:'Nombre',f_birth:'Nacimiento',f_phone:'Teléfono',f_skin:'Tipo de piel',f_proc:'Procedimiento',f_product:'Producto',f_value:'Valor (R$)',cancel:'Cancelar',save:'Guardar',skin_dry:'Seca',skin_sens:'Sensible',p_fill:'Relleno',p_bio:'Bioestimulador',demo:'Modo demo — datos en memoria',soon_t:'En construcción',soon_d:'Esta sección llega en las próximas fases (Agenda, Cotizador…).',skin:'Tipo de piel',allergy:'Alergias',pref:'Preferencias',tl:'Historial de tratamientos',add_proc:'+ Procedimiento',procs_n:'procedimientos',since:'Cliente'}};
+/* ============ CATÁLOGO REAL HARMONY (MXN) ============ */
+const CATALOG=[
+ {cat:'Toxina Botulínica',prod:'Dysport',items:[
+   {id:'tox-tercio',name:'Tercio superior',price:4900,unit:''},
+   {id:'tox-full',name:'Toxina Full Face',price:5900,unit:'',note:'Método exclusivo Dra. Isabella'},
+   {id:'tox-baby',name:'Baby botox',price:4400,unit:''}]},
+ {cat:'Skinbooster PDRN',prod:'ReMedium · PDRN + AH + Niacinamida',items:[
+   {id:'pdrn',name:'PDRN + AH + Niacinamida',price:5900,unit:'por jeringa'}]},
+ {cat:'Bioestimuladores de colágeno',prod:'',items:[
+   {id:'sculptra',name:'Sculptra',price:12500,unit:'por vial'},
+   {id:'radiesse',name:'Radiesse',price:8900,unit:'por vial'}]},
+ {cat:'Rejuran',prod:'PN de salmón (polinucleótidos)',items:[
+   {id:'rej-rostro',name:'Rejuran rostro',price:8900,unit:'por jeringa'},
+   {id:'rej-ojos',name:'Rejuran ojos',price:7900,unit:'por jeringa'}]},
+ {cat:'Rellenos faciales',prod:'Ácido hialurónico',items:[
+   {id:'relleno',name:'Relleno',price:5900,unit:'por jeringa'}]},
+ {cat:'Armonización facial',prod:'',items:[
+   {id:'armonizacion',name:'Armonización',price:8900,unit:'desde'}]},
+ {cat:'Tratamientos combinados',prod:'',items:[
+   {id:'c1',name:'Toxina Full Face + Sculptra',price:15400,unit:''},
+   {id:'c2',name:'Toxina Full Face + Radiesse',price:11900,unit:''},
+   {id:'c3',name:'Toxina Full Face + PDRN',price:8900,unit:''},
+   {id:'c4',name:'Toxina Full Face + relleno',price:8900,unit:''}]},
+ {cat:'Protocolos Harmony',prod:'',items:[
+   {id:'p-profile',name:'Profile',price:8900,unit:'desde'},
+   {id:'p-hydralift',name:'Hydralift',price:11900,unit:'desde'},
+   {id:'p-regenera',name:'Regenera',price:15900,unit:'desde'},
+   {id:'p-glow',name:'Glow',price:8500,unit:'desde'}]}
+];
+const ALL_ITEMS={}; CATALOG.forEach(c=>c.items.forEach(i=>ALL_ITEMS[i.id]={...i,cat:c.cat,prod:c.prod}));
+
+let patients=[],quotes=[],currentPatient=null,lang='es',signupMode=false,cart=[],discPct=null;
+const money=v=>'$'+(Math.round(v)||0).toLocaleString('es-MX');
+const initials=n=>(n||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+const fmtDate=d=>{if(!d)return '—';const p=String(d).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0].slice(2)}`:d;};
+
+/* ============ i18n ============ */
+const T={pt:{nav_dash:'Dashboard',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',role:'Administradora',logout:'Sair',search:'Buscar paciente...',hi:'Bem-vinda',k_act:'Pacientes',k_proc:'Procedimentos',k_rev:'Receita',k_quotes:'Cotizações',patients:'Pacientes',new_pat:'Novo paciente',no_pat:'Nenhum paciente ainda. Clique em "Novo paciente" para começar.',back:'Voltar',new_proc:'Registrar procedimento',f_name:'Nome',f_birth:'Nascimento',f_phone:'Telefone',f_skin:'Tipo de pele',f_proc:'Procedimento',f_product:'Produto / marca',f_lot:'Lote',f_value:'Valor (MXN)',cancel:'Cancelar',save:'Salvar',soon_t:'Em construção',soon_d:'A Agenda entra na próxima fatia.',skin:'Tipo de pele',allergy:'Alergias',tl:'Histórico de tratamentos',add_proc:'+ Procedimento',procs_n:'procedimentos',quoter:'Cotizador',quote:'Cotização',clear:'Limpar',f_patient:'Paciente',cart_empty:'Toque em + nos tratamentos para montar a proposta.',f_disc:'Desconto (MXN)',f_reason:'Motivo do desconto',f_pay:'Forma de pagamento',subtotal:'Subtotal',discount:'Desconto',save_quote:'Guardar cotização',quotes_t:'Cotizações',no_quotes:'Nenhuma cotização ainda.',saved:'Cotização salva! ✅',pat_saved:'Paciente salvo ✅',proc_saved:'Procedimento registrado ✅',no_patient:'Sem paciente',login_sub:'Entre para acessar a sua clínica',lbl_email:'E-mail',lbl_pass:'Senha',enter:'Entrar',create:'Criar conta',first:'Primeira vez?',have:'Já tem conta?',need_items:'Adicione ao menos um tratamento.',need_reason:'Descreva o motivo do desconto.'},
+       es:{nav_dash:'Panel',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',role:'Administradora',logout:'Salir',search:'Buscar paciente...',hi:'Bienvenida',k_act:'Pacientes',k_proc:'Procedimientos',k_rev:'Ingresos',k_quotes:'Cotizaciones',patients:'Pacientes',new_pat:'Nuevo paciente',no_pat:'Aún no hay pacientes. Haz clic en "Nuevo paciente" para empezar.',back:'Volver',new_proc:'Registrar procedimiento',f_name:'Nombre',f_birth:'Nacimiento',f_phone:'Teléfono',f_skin:'Tipo de piel',f_proc:'Procedimiento',f_product:'Producto / marca',f_lot:'Lote',f_value:'Valor (MXN)',cancel:'Cancelar',save:'Guardar',soon_t:'En construcción',soon_d:'La Agenda llega en la próxima fase.',skin:'Tipo de piel',allergy:'Alergias',tl:'Historial de tratamientos',add_proc:'+ Procedimiento',procs_n:'procedimientos',quoter:'Cotizador',quote:'Cotización',clear:'Limpiar',f_patient:'Paciente',cart_empty:'Toca + en los tratamientos para armar la propuesta.',f_disc:'Descuento (MXN)',f_reason:'Motivo del descuento',f_pay:'Forma de pago',subtotal:'Subtotal',discount:'Descuento',save_quote:'Guardar cotización',quotes_t:'Cotizaciones',no_quotes:'Aún no hay cotizaciones.',saved:'¡Cotización guardada! ✅',pat_saved:'Paciente guardado ✅',proc_saved:'Procedimiento registrado ✅',no_patient:'Sin paciente',login_sub:'Entra para acceder a tu clínica',lbl_email:'Correo',lbl_pass:'Contraseña',enter:'Entrar',create:'Crear cuenta',first:'¿Primera vez?',have:'¿Ya tienes cuenta?',need_items:'Agrega al menos un tratamiento.',need_reason:'Describe el motivo del descuento.'}};
 const tr=k=>T[lang][k]||k;
 function setLang(l){lang=l;document.getElementById('pt').classList.toggle('on',l==='pt');document.getElementById('es').classList.toggle('on',l==='es');
   document.querySelectorAll('[data-i18n]').forEach(e=>{const k=e.getAttribute('data-i18n');if(T[l][k])e.textContent=T[l][k];});
   document.querySelectorAll('[data-i18n-ph]').forEach(e=>{const k=e.getAttribute('data-i18n-ph');if(T[l][k])e.placeholder=T[l][k];});
-  renderPatients();if(currentPatient)renderDetail();renderDash();document.documentElement.lang=l;}
+  refreshLoginTexts();renderPatients();renderCatalog();renderCart();renderPatientSelect();if(currentPatient)renderDetail();document.documentElement.lang=l;}
+function refreshLoginTexts(){const s=document.getElementById('loginSub');if(!s)return;s.textContent=tr('login_sub');document.getElementById('lblEmail').textContent=tr('lbl_email');document.getElementById('lblPass').textContent=tr('lbl_pass');
+  document.getElementById('authBtn').textContent=signupMode?tr('create'):tr('enter');
+  document.getElementById('toggleAuth').innerHTML=(signupMode?tr('have'):tr('first'))+' <a onclick="toggleMode()">'+(signupMode?tr('enter'):tr('create'))+'</a>';}
+function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.style.display='block';setTimeout(()=>t.style.display='none',2600);}
 
-/* ---------- Render ---------- */
-function renderDash(){const s=store.stats();kpiPatients.textContent=s.patients;kpiProcs.textContent=s.procs;kpiRev.textContent=money(s.rev);kpiTicket.textContent=money(s.ticket);}
+/* ============ AUTH ============ */
+function toggleMode(){signupMode=!signupMode;document.getElementById('loginMsg').textContent='';refreshLoginTexts();}
+async function doAuth(){
+  const email=document.getElementById('email').value.trim(),password=document.getElementById('password').value;
+  const msg=document.getElementById('loginMsg'),btn=document.getElementById('authBtn');
+  if(!email||!password){msg.className='msg err';msg.textContent='Preencha e-mail e senha.';return;}
+  btn.disabled=true;msg.className='msg';msg.textContent='...';
+  try{
+    let res;
+    if(signupMode)res=await db.auth.signUp({email,password});
+    else res=await db.auth.signInWithPassword({email,password});
+    if(res.error){msg.className='msg err';msg.textContent=res.error.message;btn.disabled=false;return;}
+    if(signupMode&&!res.data.session){msg.className='msg ok';msg.textContent='Conta criada! Agora clique em Entrar.';signupMode=false;refreshLoginTexts();btn.disabled=false;return;}
+    await onLogin();
+  }catch(e){msg.className='msg err';msg.textContent='Erro de conexão.';btn.disabled=false;}
+}
+async function doLogout(){if(db)await db.auth.signOut();location.reload();}
+async function onLogin(name){
+  document.getElementById('login').style.display='none';document.getElementById('app').style.display='block';
+  let uname=name;
+  if(!uname&&db){const{data:{user:u}}=await db.auth.getUser();uname=(u&&u.email)?u.email.split('@')[0]:'—';}
+  document.getElementById('userName').textContent=uname||'Demo';document.getElementById('userAv').textContent=initials(uname||'Demo');
+  await loadAll();
+}
+
+/* ============ DADOS (Supabase ou demo) ============ */
+async function loadAll(){
+  if(DEMO){renderAll();return;}
+  const[p,q]=await Promise.all([
+    db.from('patients').select('*, procedures(*)').order('created_at',{ascending:true}),
+    db.from('quotes').select('*').order('created_at',{ascending:false})
+  ]);
+  if(!p.error)patients=(p.data||[]).map(x=>({...x,procedures:(x.procedures||[]).sort((a,b)=>String(b.performed_at||'').localeCompare(String(a.performed_at||'')))}));
+  quotes=q.error?[]:(q.data||[]);
+  renderAll();
+}
+function renderAll(){renderPatients();renderDash();renderCatalog();renderCart();renderPatientSelect();}
+async function savePatient(){
+  const name=document.getElementById('npName').value.trim();if(!name)return;
+  const rec={full_name:name,birth_date:document.getElementById('npBirth').value||null,phone:document.getElementById('npPhone').value||null,skin_type:document.getElementById('npSkin').value};
+  if(DEMO){patients.push({id:'d'+Date.now(),...rec,procedures:[]});}
+  else{const btn=document.getElementById('savePatBtn');btn.disabled=true;const{error}=await db.from('patients').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
+  closeModal('ovPatient');renderAll();toast(tr('pat_saved'));
+}
+async function saveProc(){
+  const v=parseInt(document.getElementById('prValue').value||'0',10);if(!v)return;
+  const rec={patient_id:currentPatient.id,name:document.getElementById('prName').value,product:[document.getElementById('prProduct').value,document.getElementById('prLot').value?('Lote '+document.getElementById('prLot').value):''].filter(Boolean).join(' · ')||null,value_cents:v*100,performed_at:new Date().toISOString().slice(0,10)};
+  if(DEMO){currentPatient.procedures.unshift({...rec});}
+  else{const btn=document.getElementById('saveProcBtn');btn.disabled=true;const{error}=await db.from('procedures').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();currentPatient=patients.find(p=>p.id===currentPatient.id);}
+  closeModal('ovProc');renderDetail();renderDash();toast(tr('proc_saved'));
+}
+
+/* ============ COTIZADOR ============ */
+function renderCatalog(){
+  const el=document.getElementById('catalogPanel');if(!el)return;
+  el.innerHTML=CATALOG.map(c=>`<div class="cat-block">
+    <div class="cat-head"><b>${c.cat}</b>${c.prod?`<small>${c.prod}</small>`:''}</div>
+    ${c.items.map(i=>`<div class="cat-item">
+      <div><div class="cn">${i.name}</div>${i.note?`<div class="cd">${i.note}</div>`:''}</div>
+      <div class="cp">${i.unit==='desde'?'<small>desde </small>':''}${money(i.price)}${i.unit&&i.unit!=='desde'?`<br><small>${i.unit}</small>`:''}</div>
+      <button class="addbtn" onclick="addToCart('${i.id}')">+</button>
+    </div>`).join('')}
+  </div>`).join('');
+}
+function addToCart(id){
+  const found=cart.find(l=>l.id===id);
+  if(found)found.qty++;
+  else{const it=ALL_ITEMS[id];cart.push({id,name:it.name,price:it.price,qty:1});}
+  renderCart();
+}
+function chQty(id,d){const l=cart.find(x=>x.id===id);if(!l)return;l.qty+=d;if(l.qty<=0)cart=cart.filter(x=>x.id!==id);renderCart();}
+function rmLine(id){cart=cart.filter(x=>x.id!==id);renderCart();}
+function chPrice(id,v){const l=cart.find(x=>x.id===id);if(l)l.price=parseInt(v||'0',10)||0;renderTotals();}
+function clearCart(){cart=[];discPct=null;document.getElementById('qDisc').value=0;document.getElementById('qReason').value='';renderCart();}
+function setDiscPct(p){discPct=p;renderCart();}
+function subTotal(){return cart.reduce((a,l)=>a+l.price*l.qty,0);}
+function discVal(){if(discPct!=null)return Math.round(subTotal()*discPct/100);return parseInt(document.getElementById('qDisc').value||'0',10)||0;}
+function renderCart(){
+  const el=document.getElementById('cartLines');if(!el)return;
+  if(!cart.length)el.innerHTML=`<div class="empty">${tr('cart_empty')}</div>`;
+  else el.innerHTML=cart.map(l=>`<div class="cart-line">
+    <div class="ln"><b>${l.name}</b><small><input type="number" value="${l.price}" style="width:74px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--muted);font-size:11px;padding:2px 5px" onchange="chPrice('${l.id}',this.value)"> MXN</small></div>
+    <div class="qty"><button onclick="chQty('${l.id}',-1)">−</button><span>${l.qty}</span><button onclick="chQty('${l.id}',1)">+</button></div>
+    <div class="lp">${money(l.price*l.qty)}</div>
+    <span class="rm" onclick="rmLine('${l.id}')">✕</span>
+  </div>`).join('');
+  if(discPct!=null)document.getElementById('qDisc').value=discVal();
+  document.querySelectorAll('#discQuick button').forEach((b,i)=>b.classList.toggle('on',[5,10,15][i]===discPct));
+  renderTotals();
+}
+function renderTotals(){
+  const s=subTotal(),d=Math.min(discVal(),s),t=s-d;
+  document.getElementById('tSub').textContent=money(s);
+  document.getElementById('tDisc').textContent='−'+money(d);
+  document.getElementById('tTotal').textContent=money(t)+' MXN';
+  document.getElementById('discReasonWrap').style.display=d>0?'block':'none';
+  const pay=document.getElementById('qPay').value;
+  document.getElementById('tMsi').textContent=(pay==='credito-3msi'&&t>0)?('3 × '+money(t/3)+' sin intereses'):'';
+}
+function renderPatientSelect(){
+  const sel=document.getElementById('qPatient');if(!sel)return;const cur=sel.value;
+  sel.innerHTML=`<option value="">— ${tr('no_patient')} —</option>`+patients.map(p=>`<option value="${p.id}">${p.full_name}</option>`).join('');
+  if(cur)sel.value=cur;
+}
+async function saveQuote(){
+  if(!cart.length){toast(tr('need_items'));return;}
+  const s=subTotal(),d=Math.min(discVal(),s);
+  const reason=document.getElementById('qReason').value.trim();
+  if(d>0&&!reason){toast(tr('need_reason'));return;}
+  const rec={patient_id:document.getElementById('qPatient').value||null,
+    items:cart.map(l=>({id:l.id,name:l.name,price:l.price,qty:l.qty})),
+    subtotal_cents:s*100,discount_cents:d*100,discount_reason:reason||null,
+    total_cents:(s-d)*100,payment_method:document.getElementById('qPay').value,status:'propuesta'};
+  if(DEMO){quotes.unshift({id:'q'+Date.now(),...rec,created_at:new Date().toISOString()});}
+  else{const btn=document.getElementById('saveQuoteBtn');btn.disabled=true;const{error}=await db.from('quotes').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
+  clearCart();renderDash();toast(tr('saved'));
+}
+
+/* ============ RENDER GERAL ============ */
+function renderDash(){
+  let procs=0,rev=0;patients.forEach(p=>(p.procedures||[]).forEach(pr=>{procs++;rev+=(pr.value_cents||0)/100;}));
+  const e=id=>document.getElementById(id);
+  if(e('kpiPatients')){e('kpiPatients').textContent=patients.length;e('kpiProcs').textContent=procs;e('kpiRev').textContent=money(rev);e('kpiQuotes').textContent=quotes.length;}
+}
 function renderPatients(){
+  const el=document.getElementById('plist');if(!el)return;
   const q=(document.getElementById('q').value||'').toLowerCase();
-  const list=store.patients.filter(p=>p.name.toLowerCase().includes(q));
-  document.getElementById('plist').innerHTML=list.map(p=>{
-    const spent=p.procs.reduce((a,b)=>a+b.value,0);
-    return `<div class="card pcard" onclick="openDetail(${p.id})"><div class="avatar">${initials(p.name)}</div>
-      <div><div class="nm">${p.name}${p.vip?'<span class="vip">VIP</span>':''}</div><div class="mt">${p.procs.length} ${tr('procs_n')} · ${p.skin}</div></div>
+  const list=patients.filter(p=>(p.full_name||'').toLowerCase().includes(q)||(p.phone||'').includes(q));
+  document.getElementById('plistEmpty').style.display=patients.length?'none':'block';
+  el.innerHTML=list.map(p=>{const spent=(p.procedures||[]).reduce((a,b)=>a+(b.value_cents||0)/100,0);
+    return `<div class="card pcard" onclick="openDetail('${p.id}')"><div class="avatar">${initials(p.full_name)}</div>
+      <div><div class="nm">${p.full_name}${p.vip?'<span class="vip">VIP</span>':''}</div><div class="mt">${(p.procedures||[]).length} ${tr('procs_n')}${p.skin_type?' · '+p.skin_type:''}</div></div>
       <div class="chip"><b>${money(spent)}</b><small>LTV</small></div></div>`;}).join('');
 }
-function openDetail(id){currentPatient=store.patients.find(p=>p.id===id);renderDetail();show('detail');}
+function openDetail(id){currentPatient=patients.find(p=>p.id===id);renderDetail();show('detail');}
 function renderDetail(){
-  const p=currentPatient;if(!p)return;const spent=p.procs.reduce((a,b)=>a+b.value,0);
+  const p=currentPatient;if(!p)return;
+  const spent=(p.procedures||[]).reduce((a,b)=>a+(b.value_cents||0)/100,0);
+  const pQuotes=quotes.filter(q=>q.patient_id===p.id);
   document.getElementById('detailCard').innerHTML=`
-    <div class="phead"><div class="avatar">${initials(p.name)}</div>
-      <div><div style="font-size:20px;font-weight:600">${p.name}${p.vip?'<span class="vip">VIP</span>':''}</div>
-        <div class="muted" style="font-size:13px;margin-top:3px">${p.birth} · ${p.phone}</div></div>
-      <div class="facts">
-        <div class="fact"><small>${tr('skin')}</small><b>${p.skin}</b></div>
-        <div class="fact"><small>${tr('allergy')}</small><b>${p.allergy}</b></div>
-        <div class="fact"><small>${tr('pref')}</small><b>${p.pref}</b></div>
-        <div class="fact"><small>LTV</small><b>${money(spent)}</b></div>
-      </div></div>
-    <div class="section-t"><span>${tr('tl')}</span><button class="btn" onclick="openProcModal()">${tr('add_proc')}</button></div>
-    <div id="procList">${p.procs.map(pr=>`<div class="proc"><div class="dot"></div><div><div class="pn">${pr.name}</div><div class="pd">${pr.product} · ${pr.date}</div></div><div class="pv">${money(pr.value)}</div></div>`).join('')||`<div class="muted" style="font-size:13px">—</div>`}</div>`;
+    <div class="phead"><div class="avatar">${initials(p.full_name)}</div>
+      <div><div style="font-size:19px;font-weight:600">${p.full_name}${p.vip?'<span class="vip">VIP</span>':''}</div>
+        <div class="muted" style="font-size:13px;margin-top:3px">${fmtDate(p.birth_date)}${p.phone?' · '+p.phone:''}</div></div>
+      <div class="facts"><div class="fact"><small>${tr('skin')}</small><b>${p.skin_type||'—'}</b></div>
+        <div class="fact"><small>${tr('allergy')}</small><b>${p.allergies||'—'}</b></div>
+        <div class="fact"><small>LTV</small><b>${money(spent)}</b></div></div></div>
+    <div class="section-t"><span>${tr('tl')}</span><button class="btn sm" onclick="openProcModal()">${tr('add_proc')}</button></div>
+    <div>${(p.procedures||[]).map(pr=>`<div class="proc"><div class="dot"></div><div><div class="pn">${pr.name}</div><div class="pd">${pr.product||'—'} · ${fmtDate(pr.performed_at)}</div></div><div class="pv">${money((pr.value_cents||0)/100)}</div></div>`).join('')||`<div class="empty">—</div>`}</div>
+    <div class="section-t"><span>${tr('quotes_t')}</span><button class="btn sm ghost" onclick="startQuoteFor('${p.id}')">+ ${tr('quote')}</button></div>
+    <div>${pQuotes.map(qq=>`<div class="quote-row"><span class="stag">${qq.status||'propuesta'}</span><span class="qd">${fmtDate(qq.created_at)}</span><span>${(qq.items||[]).length} items</span><span class="qt">${money((qq.total_cents||0)/100)}</span></div>`).join('')||`<div class="empty">${tr('no_quotes')}</div>`}</div>`;
 }
+function startQuoteFor(pid){show('cot');const sel=document.getElementById('qPatient');sel.value=pid;}
 function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('show'));document.getElementById(v).classList.add('show');
   document.querySelectorAll('.nav a,.mobilenav a').forEach(a=>a.classList.toggle('active',a.dataset.view===v));
   if(v==='dash')renderDash();document.querySelector('.content').scrollTop=0;}
-
-/* ---------- Modals ---------- */
 function openPatientModal(){npName.value='';npBirth.value='';npPhone.value='';document.getElementById('ovPatient').classList.add('show');}
-function savePatient(){if(!npName.value.trim())return;store.addPatient({name:npName.value.trim(),birth:npBirth.value||'—',phone:npPhone.value||'—',skin:npSkin.value,allergy:'Nenhuma',pref:'—'});closeModal('ovPatient');renderPatients();}
-function openProcModal(){prProduct.value='';prValue.value='';document.getElementById('ovProc').classList.add('show');}
-function saveProc(){const v=parseInt(prValue.value||'0',10);if(!v)return;const d=new Date();const date=('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+String(d.getFullYear()).slice(-2);
-  store.addProc(currentPatient.id,{name:prName.value,product:prProduct.value||'—',value:v,date});closeModal('ovProc');renderDetail();}
+function openProcModal(){
+  const sel=document.getElementById('prName');
+  sel.innerHTML=Object.values(ALL_ITEMS).map(i=>`<option>${i.name}</option>`).join('');
+  prProduct.value='';prLot.value='';prValue.value='';document.getElementById('ovProc').classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
-
 document.querySelectorAll('[data-view]').forEach(a=>a.addEventListener('click',()=>show(a.dataset.view)));
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
-renderPatients();renderDash();
+document.getElementById('qPay').addEventListener('change',renderTotals);
+
+/* ============ START ============ */
+(async()=>{
+  setLang('es');
+  if(DEMO){
+    patients=[{id:'d1',full_name:'Juliana Silva',vip:true,birth_date:'1993-05-21',phone:'55 1234 5678',skin_type:'Mixta',allergies:'Ninguna',
+      procedures:[{name:'Toxina Full Face',product:'Dysport · Lote DY123',value_cents:590000,performed_at:'2026-03-15'},{name:'Rejuran rostro',product:'Rejuran',value_cents:890000,performed_at:'2025-11-02'}]}];
+    await onLogin('Demo');return;
+  }
+  if(!db){document.getElementById('loginMsg').className='msg err';document.getElementById('loginMsg').textContent='Falha ao carregar. Verifique a internet.';return;}
+  const{data:{session}}=await db.auth.getSession();if(session)await onLogin();
+})();
 </script>
 </body>
 </html>
