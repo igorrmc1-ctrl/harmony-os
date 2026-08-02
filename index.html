@@ -133,6 +133,30 @@
   .sig-wrap canvas{width:100%;height:160px;display:block;border-radius:14px;touch-action:none;cursor:crosshair;}
   .sig-clear{position:absolute;top:8px;right:10px;font-size:11px;color:#666;cursor:pointer;background:rgba(255,255,255,.85);padding:3px 8px;border-radius:8px;}
   .legal{font-size:11px;color:var(--muted);line-height:1.55;max-height:120px;overflow-y:auto;background:var(--surface2);border-radius:10px;padding:10px 12px;margin-bottom:14px;}
+  /* ---------- PATIENT CANVAS ---------- */
+  .ptabs{display:flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:4px;margin:14px 0;}
+  .ptabs button{flex:1;background:transparent;border:none;color:var(--muted);padding:9px 4px;border-radius:10px;font-size:13px;font-weight:600;cursor:pointer;}
+  .ptabs button.on{background:var(--surface2);color:var(--text);}
+  .clock{display:flex;align-items:center;gap:10px;padding:8px 0;width:100%;}
+  .clock .ring{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;font-size:15px;flex-shrink:0;background:var(--surface2);}
+  .clock .cn{font-size:13.5px;font-weight:600;} .clock .cs{font-size:11.5px;color:var(--muted);}
+  .clock .tag2{margin-left:auto;font-size:11px;font-weight:600;padding:3px 9px;border-radius:12px;white-space:nowrap;}
+  .t-ok{background:rgba(143,199,161,.13);color:var(--green);}
+  .t-due{background:rgba(201,166,107,.15);color:var(--gold);}
+  .t-over{background:rgba(230,120,120,.14);color:#F09090;}
+  .t-never{background:var(--surface2);color:var(--muted);}
+  .nba{background:linear-gradient(150deg,rgba(201,123,142,.14),var(--surface));border:1px solid rgba(201,123,142,.3);}
+  .nba p{font-size:13.5px;line-height:1.5;margin:6px 0 12px;}
+  .score{display:inline-flex;align-items:center;gap:6px;font-size:12.5px;color:var(--muted);}
+  .score b{color:var(--text);} .sdot{width:10px;height:10px;border-radius:50%;display:inline-block;}
+  .ev{display:flex;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);align-items:center;}
+  .ev:last-child{border-bottom:none;}
+  .ev .eic{width:34px;height:34px;border-radius:10px;background:var(--surface2);display:grid;place-items:center;font-size:15px;flex-shrink:0;}
+  .ev .et{font-size:14px;font-weight:600;} .ev .em{font-size:12px;color:var(--muted);margin-top:2px;}
+  .ev .ev-r{margin-left:auto;text-align:right;flex-shrink:0;} .ev .ed{font-size:11.5px;color:var(--muted);} .ev .evv{font-size:13.5px;font-weight:600;margin-top:2px;}
+  .wa{background:#1EBE5D;color:#fff;border:none;border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
+  .slotgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
+  .slot{aspect-ratio:3/4;border-radius:12px;background:var(--surface2);border:1.5px dashed var(--border);display:grid;place-items:center;color:var(--muted);font-size:11.5px;text-align:center;padding:6px;line-height:1.5;}
   /* modals */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;place-items:center;z-index:60;padding:18px;} .overlay.show{display:grid;}
   .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;width:100%;max-width:440px;max-height:88vh;overflow-y:auto;} .modal h3{font-size:17px;margin-bottom:14px;}
@@ -206,7 +230,7 @@
         <!-- DETALHE -->
         <div id="detail" class="view">
           <div class="back" onclick="show('pac')">← <span data-i18n="back">Voltar</span></div>
-          <div class="card" id="detailCard"></div>
+          <div id="detailCard"></div>
         </div>
 
         <!-- COTIZADOR -->
@@ -629,7 +653,7 @@ function renderPatients(){
       <div class="chip"><b>${money(spent)}</b><small>LTV</small></div></div>`;}).join('');
 }
 function openDetail(id){currentPatient=patients.find(p=>p.id===id);renderDetail();show('detail');}
-function renderDetail(){
+function renderDetail_legacy(){
   const p=currentPatient;if(!p)return;
   const spent=(p.procedures||[]).reduce((a,b)=>a+(b.value_cents||0)/100,0);
   const pQuotes=quotes.filter(q=>q.patient_id===p.id);
@@ -663,6 +687,137 @@ function closeModal(id){document.getElementById(id).classList.remove('show');}
 document.querySelectorAll('[data-view]').forEach(a=>a.addEventListener('click',()=>show(a.dataset.view)));
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
 document.getElementById('qPay').addEventListener('change',renderTotals);
+
+/* ============ PATIENT CANVAS (Fatia 2.1) ============ */
+const L=(es,pt)=>lang==='pt'?pt:es;
+const CYCLES=[
+ {key:'tox',label:'Toxina',m:/toxina|botox|baby/i,days:120},
+ {key:'skin',label:'Skinbooster / PDRN',m:/skinbooster|pdrn|rejuran|niacinamida/i,days:180},
+ {key:'bio',label:'Bioestimulador',m:/sculptra|radiesse|bioestim/i,days:365},
+ {key:'fill',label:'Relleno / Armonización',m:/relleno|preench|armoniza/i,days:365}
+];
+const daysSince=d=>Math.floor((Date.now()-new Date(d).getTime())/86400000);
+function clocksFor(p){
+  return CYCLES.map(c=>{
+    const procs=(p.procedures||[]).filter(x=>c.m.test(x.name||''));
+    if(!procs.length)return {c,status:'never'};
+    const last=procs[0].performed_at||procs[0].created_at;
+    const ds=daysSince(last),left=c.days-ds;
+    return {c,last,ds,left,status:left<0?'over':(left<=30?'due':'ok')};
+  });
+}
+function scoreFor(p,an,clocks){
+  let s=40,why=[];
+  if(an){s+=20;why.push(L('Anamnesis firmada +20','Anamnese assinada +20'));}else why.push(L('Anamnesis pendiente +0','Anamnese pendente +0'));
+  if((p.procedures||[]).length){s+=15;why.push(L('Historial activo +15','Histórico ativo +15'));}
+  const over=clocks.filter(k=>k.status==='over').length;
+  if((p.procedures||[]).length&&!over){s+=15;why.push(L('Tratamientos al día +15','Tratamentos em dia +15'));}
+  if(over){s-=10*over;why.push(L('Mantenimiento vencido −','Manutenção vencida −')+10*over);}
+  if(p.phone){s+=10;why.push(L('Contacto completo +10','Contato completo +10'));}
+  s=Math.max(5,Math.min(100,s));
+  return {s,why,color:s>=75?'var(--green)':(s>=50?'var(--gold)':'#F09090')};
+}
+function waLink(p){
+  let d=(p.phone||'').replace(/\D/g,'');
+  if(d.length===10)d='52'+d;
+  const first=(p.full_name||'').split(' ')[0];
+  return 'https://wa.me/'+d+'?text='+encodeURIComponent('Hola '+first+' ✨ Te escribimos de Harmony Clinic.');
+}
+function nextActionFor(p,an,clocks,pQuotes){
+  if(!an)return{msg:L('La anamnesis aún no fue realizada. Es el primer paso de seguridad clínica.','A anamnese ainda não foi feita. É o primeiro passo de segurança clínica.'),cta:L('Realizar anamnesis','Realizar anamnese'),fn:'openWizard()'};
+  const urgent=clocks.find(k=>k.status==='over')||clocks.find(k=>k.status==='due');
+  if(urgent)return{msg:urgent.status==='over'?L(urgent.c.label+': mantenimiento vencido hace '+(-urgent.left)+' días. Buen momento para reactivar.',urgent.c.label+': manutenção vencida há '+(-urgent.left)+' dias. Bom momento para reativar.'):L(urgent.c.label+': vence en '+urgent.left+' días. Proponer manutención ahora.',urgent.c.label+': vence em '+urgent.left+' dias. Propor manutenção agora.'),cta:L('Crear cotización','Criar cotização'),fn:"startQuoteFor('"+p.id+"')"};
+  const open=pQuotes.find(q=>q.status==='propuesta');
+  if(open&&p.phone)return{msg:L('Hay una cotización abierta esperando respuesta.','Há uma cotização aberta aguardando resposta.'),cta:'💬 Follow-up',fn:"window.open(waLink(currentPatient),'_blank')"};
+  if(!(p.procedures||[]).length)return{msg:L('Aún sin procedimientos. Proponer una valoración inicial.','Ainda sem procedimentos. Propor uma avaliação inicial.'),cta:L('Crear cotización','Criar cotização'),fn:"startQuoteFor('"+p.id+"')"};
+  return{msg:L('Todo al día ✓ Mantén la relación viva.','Tudo em dia ✓ Mantenha a relação viva.'),cta:L('Nueva cotización','Nova cotização'),fn:"startQuoteFor('"+p.id+"')"};
+}
+function eventsFor(p,an,pQuotes){
+  const ev=[];
+  (p.procedures||[]).forEach(x=>ev.push({d:x.performed_at||x.created_at,ic:'◈',t:x.name,m:x.product||'',v:money((x.value_cents||0)/100)}));
+  pQuotes.forEach(q=>ev.push({d:q.created_at,ic:'✦',t:L('Cotización','Cotização')+' · '+(q.status||'propuesta'),m:(q.items||[]).length+' items',v:money((q.total_cents||0)/100)}));
+  if(an)ev.push({d:an.signed_at||an.created_at,ic:'✓',t:L('Anamnesis firmada','Anamnese assinada'),m:an.image_consent?L('Uso de imagen autorizado','Uso de imagem autorizado'):'',v:''});
+  if(p.created_at)ev.push({d:p.created_at,ic:'◇',t:L('Paciente registrada','Paciente registrada'),m:'',v:''});
+  return ev.filter(e=>e.d).sort((a,b)=>String(b.d).localeCompare(String(a.d)));
+}
+let pTab='res';
+function renderDetail(){
+  const p=currentPatient;if(!p)return;
+  const spent=(p.procedures||[]).reduce((a,b)=>a+(b.value_cents||0)/100,0);
+  const pQuotes=quotes.filter(q=>q.patient_id===p.id);
+  const an=anamneseFor(p.id),alerts=alertsFor(an),clocks=clocksFor(p);
+  const sc=scoreFor(p,an,clocks);
+  const alertLang=lang==='pt'?'pt':'es';
+  const visits=(p.procedures||[]).length;
+  const stage=p.vip?'VIP':(visits>=3?L('Recurrente','Recorrente'):(visits>=1?L('Paciente','Paciente'):L('Nueva','Nova')));
+  const urgent=clocks.find(k=>k.status==='over')||clocks.find(k=>k.status==='due');
+  const pending=pQuotes.filter(q=>q.status==='propuesta').reduce((a,q)=>a+(q.total_cents||0)/100,0);
+  document.getElementById('detailCard').innerHTML=`
+   <div class="card">
+    <div class="phead"><div class="avatar">${initials(p.full_name)}</div>
+      <div><div style="font-size:19px;font-weight:600">${p.full_name} <span class="vip">${stage}</span></div>
+        <div class="muted" style="font-size:13px;margin-top:3px">${fmtDate(p.birth_date)}${p.phone?' · '+p.phone:''}</div>
+        <div class="score" style="margin-top:7px"><span class="sdot" style="background:${sc.color}"></span><b>${sc.s}</b> Health Score · <a style="color:var(--rose2);cursor:pointer" onclick="toast('${sc.why.join(' · ').replace(/'/g,'')}')">${L('¿por qué?','por quê?')}</a></div></div>
+      <div class="facts">
+        <div class="fact"><small>${L('Última visita','Última visita')}</small><b>${visits?fmtDate(p.procedures[0].performed_at):'—'}</b></div>
+        <div class="fact"><small>LTV</small><b>${money(spent)}</b></div>
+        <div class="fact"><small>${L('Pendiente','Pendente')}</small><b>${pending?money(pending):'—'}</b></div></div>
+      ${alerts.length?`<div class="alert-chips">${alerts.map(a=>`<span class="achip ${a.c}">⚠ ${a.l[alertLang]}</span>`).join('')}</div>`:''}
+      ${urgent?`<div class="clock" style="margin-top:8px"><div class="ring" style="background:${urgent.status==='over'?'rgba(230,120,120,.14)':'rgba(201,166,107,.15)'}">🕐</div><div><div class="cn">${urgent.c.label}</div><div class="cs">${urgent.status==='over'?L('vencido hace ','vencido há ')+(-urgent.left)+L(' días',' dias'):L('vence en ','vence em ')+urgent.left+L(' días',' dias')}</div></div></div>`:''}
+      <div style="display:flex;gap:8px;margin-top:14px;width:100%;flex-wrap:wrap">
+        ${p.phone?`<button class="wa" onclick="window.open(waLink(currentPatient),'_blank')">💬 WhatsApp</button>`:''}
+        <button class="btn" style="flex:1;min-width:130px" onclick="startQuoteFor('${p.id}')">+ ${L('Cotización','Cotização')}</button>
+        <button class="btn ghost" onclick="openProcModal()">+ ${L('Procedimiento','Procedimento')}</button></div>
+   </div>
+   <div class="ptabs">
+     <button class="${pTab==='res'?'on':''}" onclick="setPTab('res')">${L('Resumen','Resumo')}</button>
+     <button class="${pTab==='jor'?'on':''}" onclick="setPTab('jor')">Jornada</button>
+     <button class="${pTab==='fot'?'on':''}" onclick="setPTab('fot')">Fotos</button>
+     <button class="${pTab==='fic'?'on':''}" onclick="setPTab('fic')">Ficha</button></div>
+   <div id="ptabBody"></div>`;
+  renderPTab();
+}
+function setPTab(t){pTab=t;renderDetail();}
+function renderPTab(){
+  const p=currentPatient,el=document.getElementById('ptabBody');if(!p||!el)return;
+  const pQuotes=quotes.filter(q=>q.patient_id===p.id);
+  const an=anamneseFor(p.id),clocks=clocksFor(p);
+  if(pTab==='res'){
+    const nba=nextActionFor(p,an,clocks,pQuotes);
+    const lastP=(p.procedures||[])[0];
+    el.innerHTML=`
+     <div class="card nba"><div class="section-t" style="margin:0 0 4px"><span>✦ ${L('Próxima mejor acción','Próxima melhor ação')}</span></div>
+       <p>${nba.msg}</p><button class="btn sm" onclick="${nba.fn}">${nba.cta}</button></div>
+     <div class="card" style="margin-top:12px"><div class="section-t" style="margin:0 0 6px"><span>🕐 ${L('Relojes de tratamiento','Relógios de tratamento')}</span></div>
+       ${clocks.map(k=>`<div class="clock"><div class="ring">${k.status==='never'?'—':'🕐'}</div>
+         <div><div class="cn">${k.c.label}</div><div class="cs">${k.status==='never'?L('Nunca realizado','Nunca realizado'):fmtDate(k.last)+' · '+L('hace ','há ')+k.ds+L(' días',' dias')}</div></div>
+         <span class="tag2 t-${k.status}">${k.status==='never'?'—':k.status==='ok'?'OK':k.status==='due'?L('vence en ','vence em ')+k.left+'d':L('vencido','vencido')}</span></div>`).join('')}</div>
+     ${lastP?`<div class="card" style="margin-top:12px"><div class="section-t" style="margin:0 0 6px"><span>${L('Última consulta','Última consulta')}</span></div>
+       <div class="ev" style="border:none;padding:4px 0"><div class="eic">◈</div><div><div class="et">${lastP.name}</div><div class="em">${lastP.product||''}</div></div><div class="ev-r"><div class="ed">${fmtDate(lastP.performed_at)}</div><div class="evv">${money((lastP.value_cents||0)/100)}</div></div></div></div>`:''}`;
+  }else if(pTab==='jor'){
+    const evs=eventsFor(p,an,pQuotes);
+    el.innerHTML=`<div class="card">${evs.map(e=>`<div class="ev"><div class="eic">${e.ic}</div><div><div class="et">${e.t}</div>${e.m?`<div class="em">${e.m}</div>`:''}</div><div class="ev-r"><div class="ed">${fmtDate(e.d)}</div>${e.v?`<div class="evv">${e.v}</div>`:''}</div></div>`).join('')||`<div class="empty">—</div>`}</div>`;
+  }else if(pTab==='fot'){
+    const slots=['Frontal','45° D','45° E','Perfil D','Perfil E',L('Sonrisa','Sorriso')];
+    el.innerHTML=`<div class="card"><div class="section-t" style="margin:0 0 10px"><span>📷 ${L('Fotos estandarizadas','Fotos padronizadas')}</span></div>
+      <div class="slotgrid">${slots.map(s=>`<div class="slot">📷<br>${s}</div>`).join('')}</div>
+      <div class="empty" style="margin-top:10px">${L('Módulo de fotos en construcción — próxima entrega (2.2).','Módulo de fotos em construção — próxima entrega (2.2).')}</div></div>`;
+  }else{
+    el.innerHTML=`
+     <div class="card"><div class="section-t" style="margin:0 0 6px"><span>✓ Compliance</span></div>
+       <div class="anam-status" style="flex-wrap:wrap;gap:8px">
+         ${an?`<span class="achip ok">✓ ${tr('anam_done')} ${fmtDate(an.signed_at||an.created_at)}</span>`:`<span class="achip amber">✗ ${L('Anamnesis pendiente','Anamnese pendente')}</span>`}
+         ${an&&an.image_consent?`<span class="achip ok">📸 ${tr('anam_img')}</span>`:`<span class="achip amber">📸 ${L('Imagen: no autorizada','Imagem: não autorizada')}</span>`}</div>
+       <button class="btn sm ${an?'ghost':''}" style="margin-top:12px" onclick="openWizard()">${an?tr('anam_view'):tr('anam_do')}</button></div>
+     <div class="card" style="margin-top:12px"><div class="section-t" style="margin:0 0 6px"><span>${L('Datos','Dados')}</span></div>
+       <div class="facts" style="margin:0;gap:16px">
+         <div class="fact"><small>${tr('skin')}</small><b>${p.skin_type||'—'}</b></div>
+         <div class="fact"><small>${L('Nacimiento','Nascimento')}</small><b>${fmtDate(p.birth_date)}</b></div>
+         <div class="fact"><small>${L('Teléfono','Telefone')}</small><b>${p.phone||'—'}</b></div></div></div>
+     <div class="card" style="margin-top:12px"><div class="section-t" style="margin:0 0 6px"><span>${tr('quotes_t')}</span><button class="btn sm ghost" onclick="startQuoteFor('${p.id}')">+ ${tr('quote')}</button></div>
+       ${pQuotes.map(qq=>`<div class="quote-row"><span class="stag">${qq.status||'propuesta'}</span><span class="qd">${fmtDate(qq.created_at)}</span><span>${(qq.items||[]).length} items</span><span class="qt">${money((qq.total_cents||0)/100)}</span></div>`).join('')||`<div class="empty">${tr('no_quotes')}</div>`}</div>`;
+  }
+}
 
 /* ============ START ============ */
 (async()=>{
