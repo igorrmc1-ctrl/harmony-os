@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="pt">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<title>Harmony OS — Fatia 1</title>
+<style>
+  :root{--bg:#0E0E12;--surface:#16161C;--surface2:#1E1E26;--border:#2A2A34;--rose:#C97B8E;--rose2:#E8A0B4;--gold:#C9A66B;--green:#8FC7A1;--text:#F4F4F7;--muted:#8A8A96;--radius:16px;}
+  *{box-sizing:border-box;margin:0;padding:0;}
+  body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;background:var(--bg);color:var(--text);-webkit-font-smoothing:antialiased;display:flex;min-height:100vh;min-height:100dvh;}
+  a{color:inherit;text-decoration:none;} .muted{color:var(--muted);} .green{color:var(--green);}
+  input,select,textarea{font-family:inherit;}
+  .sidebar{width:230px;background:#101015;border-right:1px solid var(--border);padding:22px 14px;display:flex;flex-direction:column;gap:6px;flex-shrink:0;position:sticky;top:0;height:100vh;height:100dvh;}
+  .brand{display:flex;align-items:center;gap:10px;padding:6px 10px 22px;}
+  .brand .logo{width:34px;height:34px;border-radius:50%;border:1.5px solid var(--gold);display:grid;place-items:center;color:var(--gold);font-weight:700;}
+  .brand b{font-weight:600;letter-spacing:2px;font-size:15px;} .brand b span{color:var(--gold);}
+  .nav a{display:flex;align-items:center;gap:12px;padding:11px 12px;border-radius:11px;color:var(--muted);font-size:14.5px;font-weight:500;cursor:pointer;transition:.15s;}
+  .nav a:hover{background:var(--surface);color:var(--text);}
+  .nav a.active{background:linear-gradient(90deg,rgba(201,123,142,.22),rgba(201,123,142,.06));color:var(--text);border:1px solid rgba(201,123,142,.25);}
+  .nav a .ic{width:19px;text-align:center;}
+  .side-foot{margin-top:auto;display:flex;align-items:center;gap:10px;padding:12px 8px;border-top:1px solid var(--border);}
+  .avatar{border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--gold));display:grid;place-items:center;font-weight:600;color:#1a1a1a;flex-shrink:0;width:36px;height:36px;font-size:14px;}
+  .main{flex:1;display:flex;flex-direction:column;min-width:0;}
+  .topbar{display:flex;align-items:center;gap:16px;padding:16px 26px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(14,14,18,.85);backdrop-filter:blur(12px);z-index:20;}
+  .search{flex:1;max-width:440px;display:flex;align-items:center;gap:10px;background:var(--surface);border:1px solid var(--border);border-radius:12px;padding:10px 14px;}
+  .search input{background:none;border:none;outline:none;color:var(--text);font-size:14px;width:100%;}
+  .top-actions{display:flex;align-items:center;gap:14px;margin-left:auto;}
+  .lang{display:flex;border:1px solid var(--border);border-radius:10px;overflow:hidden;font-size:12.5px;font-weight:600;}
+  .lang button{background:transparent;color:var(--muted);border:none;padding:7px 12px;cursor:pointer;} .lang button.on{background:var(--rose);color:#fff;}
+  .content{padding:26px;overflow-y:auto;}
+  .page-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:22px;}
+  .page-head h1{font-size:25px;font-weight:600;}
+  .btn{background:var(--rose);color:#fff;border:none;border-radius:12px;padding:11px 16px;font-size:14px;font-weight:600;cursor:pointer;}
+  .btn.ghost{background:transparent;border:1px solid var(--border);color:var(--text);} .btn.full{width:100%;}
+  .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
+  .grid{display:grid;gap:16px;} .kpis{grid-template-columns:repeat(auto-fit,minmax(180px,1fr));margin-bottom:8px;}
+  .kpi .k-top{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;margin-bottom:10px;}
+  .kpi .k-ic{width:30px;height:30px;border-radius:9px;background:var(--surface2);display:grid;place-items:center;font-size:15px;}
+  .kpi .k-val{font-size:25px;font-weight:650;letter-spacing:-.5px;} .kpi .k-sub{font-size:12.5px;margin-top:6px;}
+  /* patient list */
+  .plist{display:grid;grid-template-columns:repeat(auto-fill,minmax(280px,1fr));gap:14px;}
+  .pcard{display:flex;align-items:center;gap:13px;cursor:pointer;transition:.15s;}
+  .pcard:hover{border-color:var(--rose);} .pcard .avatar{width:46px;height:46px;font-size:17px;}
+  .pcard .nm{font-size:15px;font-weight:600;} .pcard .mt{font-size:12.5px;color:var(--muted);margin-top:2px;}
+  .vip{background:var(--gold);color:#1a1a1a;font-size:9.5px;font-weight:700;padding:2px 6px;border-radius:5px;vertical-align:middle;margin-left:6px;}
+  .chip{margin-left:auto;text-align:right;} .chip b{font-size:13px;} .chip small{display:block;color:var(--muted);font-size:11px;}
+  /* detail */
+  .phead{display:flex;align-items:center;gap:16px;flex-wrap:wrap;}
+  .phead .avatar{width:64px;height:64px;font-size:22px;}
+  .facts{display:flex;gap:22px;flex-wrap:wrap;margin-left:auto;}
+  .fact small{color:var(--muted);font-size:11px;display:block;} .fact b{font-size:14px;font-weight:600;}
+  .section-t{font-size:15px;font-weight:600;margin:22px 0 14px;display:flex;justify-content:space-between;align-items:center;}
+  .proc{display:flex;align-items:center;gap:12px;padding:12px 0;border-bottom:1px solid var(--border);}
+  .proc:last-child{border-bottom:none;} .proc .dot{width:10px;height:10px;border-radius:50%;background:var(--rose);flex-shrink:0;}
+  .proc .pn{font-size:14px;font-weight:500;} .proc .pd{font-size:12px;color:var(--muted);}
+  .proc .pv{margin-left:auto;font-size:14px;font-weight:600;}
+  .back{color:var(--muted);font-size:13px;cursor:pointer;display:inline-flex;gap:6px;margin-bottom:14px;}
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;place-items:center;z-index:60;padding:18px;}
+  .overlay.show{display:grid;} .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;width:100%;max-width:440px;}
+  .modal h3{font-size:18px;margin-bottom:16px;} .field{margin-bottom:13px;}
+  .field label{display:block;font-size:12.5px;color:var(--muted);margin-bottom:6px;}
+  .field input,.field select{width:100%;background:var(--surface2);border:1px solid var(--border);border-radius:10px;padding:11px 13px;color:var(--text);font-size:14px;outline:none;}
+  .field input:focus,.field select:focus{border-color:var(--rose);}
+  .modal-actions{display:flex;gap:10px;margin-top:8px;} .modal-actions .btn{flex:1;}
+  .badge-demo{position:fixed;bottom:14px;right:14px;background:var(--surface2);border:1px solid var(--gold);color:var(--gold);font-size:11px;padding:6px 12px;border-radius:20px;z-index:50;}
+  .view{display:none;} .view.show{display:block;}
+  .mobilenav{display:none;}
+  @media(max-width:820px){
+    body{flex-direction:column;} .sidebar{display:none;} .facts{margin-left:0;}
+    .content{padding:16px;padding-bottom:82px;} .topbar{padding:13px 15px;} .search{max-width:none;}
+    .page-head h1{font-size:21px;} .plist{grid-template-columns:1fr;}
+    .mobilenav{display:flex;position:fixed;bottom:0;left:0;right:0;background:#101015;border-top:1px solid var(--border);padding:10px 0 calc(10px + env(safe-area-inset-bottom));z-index:40;}
+    .mobilenav a{flex:1;text-align:center;color:var(--muted);font-size:10.5px;cursor:pointer;} .mobilenav a .ic{display:block;font-size:19px;margin-bottom:3px;} .mobilenav a.active{color:var(--rose2);}
+  }
+</style>
+</head>
+<body>
+  <aside class="sidebar">
+    <div class="brand"><div class="logo">H</div><b>HARMONY <span>OS</span></b></div>
+    <nav class="nav">
+      <a data-view="dash"><span class="ic">▤</span><span data-i18n="nav_dash">Dashboard</span></a>
+      <a class="active" data-view="pac"><span class="ic">☺</span><span data-i18n="nav_pac">Pacientes</span></a>
+      <a data-view="soon"><span class="ic">▦</span><span data-i18n="nav_age">Agenda</span></a>
+      <a data-view="soon"><span class="ic">✦</span><span data-i18n="nav_cot">Cotizador</span></a>
+      <a data-view="soon"><span class="ic">$</span><span data-i18n="nav_fin">Financeiro</span></a>
+      <a data-view="soon"><span class="ic">⚙</span><span data-i18n="nav_cfg">Configurações</span></a>
+    </nav>
+    <div class="side-foot"><div class="avatar">I</div><div><div style="font-size:13px;font-weight:600">Dra. Isabella</div><div class="muted" style="font-size:11px" data-i18n="role">Administradora</div></div></div>
+  </aside>
+
+  <div class="main">
+    <div class="topbar">
+      <div class="search">🔍<input id="q" data-i18n-ph="search" placeholder="Buscar paciente..." oninput="renderPatients()"></div>
+      <div class="top-actions">
+        <div class="lang"><button id="pt" class="on" onclick="setLang('pt')">PT</button><button id="es" onclick="setLang('es')">ES</button></div>
+        <div class="avatar" style="width:34px;height:34px;font-size:13px">I</div>
+      </div>
+    </div>
+
+    <div class="content">
+      <!-- DASHBOARD -->
+      <div id="dash" class="view">
+        <div class="page-head"><h1><span data-i18n="hi">Bem-vinda</span>, Dra. Isabella 👋</h1></div>
+        <div class="grid kpis">
+          <div class="card kpi"><div class="k-top"><div class="k-ic">☺</div><span data-i18n="k_act">Pacientes ativos</span></div><div class="k-val" id="kpiPatients">0</div></div>
+          <div class="card kpi"><div class="k-top"><div class="k-ic">◈</div><span data-i18n="k_proc">Procedimentos</span></div><div class="k-val" id="kpiProcs">0</div></div>
+          <div class="card kpi"><div class="k-top"><div class="k-ic">▦</div><span data-i18n="k_rev">Receita total</span></div><div class="k-val" id="kpiRev">R$ 0</div></div>
+          <div class="card kpi"><div class="k-top"><div class="k-ic">✦</div><span data-i18n="k_tick">Ticket médio</span></div><div class="k-val" id="kpiTicket">R$ 0</div></div>
+        </div>
+      </div>
+
+      <!-- PACIENTES -->
+      <div id="pac" class="view show">
+        <div class="page-head"><h1 data-i18n="patients">Pacientes</h1><button class="btn" onclick="openPatientModal()">+ <span data-i18n="new_pat">Novo paciente</span></button></div>
+        <div class="plist" id="plist"></div>
+      </div>
+
+      <!-- DETALHE -->
+      <div id="detail" class="view">
+        <div class="back" onclick="show('pac')">← <span data-i18n="back">Voltar</span></div>
+        <div class="card" id="detailCard"></div>
+      </div>
+
+      <!-- EM BREVE -->
+      <div id="soon" class="view">
+        <div class="card" style="text-align:center;padding:50px"><div style="font-size:34px">✦</div><h1 style="font-size:20px;margin:12px 0 6px" data-i18n="soon_t">Em construção</h1><p class="muted" data-i18n="soon_d">Esta seção entra nas próximas fatias (Agenda, Cotizador…).</p></div>
+      </div>
+    </div>
+  </div>
+
+  <nav class="mobilenav">
+    <a data-view="dash"><span class="ic">▤</span><span data-i18n="nav_dash">Dashboard</span></a>
+    <a class="active" data-view="pac"><span class="ic">☺</span><span data-i18n="nav_pac">Pacientes</span></a>
+    <a data-view="soon"><span class="ic">▦</span><span data-i18n="nav_age">Agenda</span></a>
+    <a data-view="soon"><span class="ic">✦</span><span data-i18n="nav_cot">Cotizador</span></a>
+  </nav>
+
+  <!-- Modal: novo paciente -->
+  <div class="overlay" id="ovPatient">
+    <div class="modal">
+      <h3 data-i18n="new_pat">Novo paciente</h3>
+      <div class="field"><label data-i18n="f_name">Nome</label><input id="npName"></div>
+      <div class="field"><label data-i18n="f_birth">Nascimento</label><input id="npBirth" placeholder="dd/mm/aaaa"></div>
+      <div class="field"><label data-i18n="f_phone">Telefone</label><input id="npPhone"></div>
+      <div class="field"><label data-i18n="f_skin">Tipo de pele</label>
+        <select id="npSkin"><option>Normal</option><option>Mista</option><option>Oleosa</option><option data-i18n="skin_dry">Seca</option><option data-i18n="skin_sens">Sensível</option></select></div>
+      <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovPatient')" data-i18n="cancel">Cancelar</button><button class="btn" onclick="savePatient()" data-i18n="save">Salvar</button></div>
+    </div>
+  </div>
+
+  <!-- Modal: novo procedimento -->
+  <div class="overlay" id="ovProc">
+    <div class="modal">
+      <h3 data-i18n="new_proc">Registrar procedimento</h3>
+      <div class="field"><label data-i18n="f_proc">Procedimento</label>
+        <select id="prName"><option>Botox</option><option data-i18n="p_fill">Preenchimento</option><option>Skinbooster</option><option data-i18n="p_bio">Bioestimulador</option><option>Fios de PDO</option></select></div>
+      <div class="field"><label data-i18n="f_product">Produto</label><input id="prProduct" placeholder="Dysport, Sculptra..."></div>
+      <div class="field"><label data-i18n="f_value">Valor (R$)</label><input id="prValue" type="number" placeholder="1690"></div>
+      <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovProc')" data-i18n="cancel">Cancelar</button><button class="btn" onclick="saveProc()" data-i18n="save">Salvar</button></div>
+    </div>
+  </div>
+
+  <div class="badge-demo">● <span data-i18n="demo">Modo demo — dados na memória</span></div>
+
+<script>
+/* ---------- STORE (camada isolada: troca por Supabase depois) ---------- */
+const store = {
+  patients: [
+    {id:1,name:'Juliana Silva',vip:true,birth:'21/05/1993',phone:'(11) 98765-4321',skin:'Mista',allergy:'Nenhuma',pref:'Natural',
+      procs:[{name:'Botox',product:'Toxina Botulínica',value:1200,date:'05/01/24'},{name:'Preenchimento',product:'Ácido Hialurônico',value:2500,date:'20/03/24'},{name:'Skinbooster',product:'Profhilo',value:1800,date:'10/07/24'},{name:'Bioestimulador',product:'Sculptra',value:2800,date:'25/09/24'},{name:'Botox',product:'Dysport',value:1200,date:'15/03/25'}]},
+    {id:2,name:'Fernanda Lima',vip:false,birth:'12/09/1988',phone:'(11) 97654-3210',skin:'Oleosa',allergy:'Nenhuma',pref:'Natural',
+      procs:[{name:'Preenchimento',product:'Revofil Ultra',value:2890,date:'02/02/25'}]},
+    {id:3,name:'Carolina Souza',vip:false,birth:'30/11/1995',phone:'(11) 96543-2109',skin:'Normal',allergy:'Nenhuma',pref:'—',
+      procs:[{name:'Skinbooster',product:'Profhilo',value:1890,date:'18/04/25'}]},
+  ],
+  nextId:4,
+  addPatient(p){p.id=this.nextId++;p.procs=[];p.vip=false;this.patients.push(p);},
+  addProc(pid,proc){const p=this.patients.find(x=>x.id===pid);if(p)p.procs.unshift(proc);},
+  stats(){let procs=0,rev=0;this.patients.forEach(p=>p.procs.forEach(pr=>{procs++;rev+=pr.value;}));return{patients:this.patients.length,procs,rev,ticket:procs?Math.round(rev/procs):0};}
+};
+let currentPatient=null, lang='pt';
+const money=v=>'R$ '+v.toLocaleString('pt-BR');
+const initials=n=>n.split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
+
+/* ---------- i18n ---------- */
+const T={pt:{nav_dash:'Dashboard',nav_pac:'Pacientes',nav_age:'Agenda',nav_cot:'Cotizador',nav_fin:'Financeiro',nav_cfg:'Configurações',role:'Administradora',search:'Buscar paciente...',hi:'Bem-vinda',k_act:'Pacientes ativos',k_proc:'Procedimentos',k_rev:'Receita total',k_tick:'Ticket médio',patients:'Pacientes',new_pat:'Novo paciente',back:'Voltar',new_proc:'Registrar procedimento',f_name:'Nome',f_birth:'Nascimento',f_phone:'Telefone',f_skin:'Tipo de pele',f_proc:'Procedimento',f_product:'Produto',f_value:'Valor (R$)',cancel:'Cancelar',save:'Salvar',skin_dry:'Seca',skin_sens:'Sensível',p_fill:'Preenchimento',p_bio:'Bioestimulador',demo:'Modo demo — dados na memória',soon_t:'Em construção',soon_d:'Esta seção entra nas próximas fatias (Agenda, Cotizador…).',skin:'Tipo de pele',allergy:'Alergias',pref:'Preferências',tl:'Histórico de tratamentos',add_proc:'+ Procedimento',procs_n:'procedimentos',since:'Cliente'},
+       es:{nav_dash:'Panel',nav_pac:'Pacientes',nav_age:'Agenda',nav_cot:'Cotizador',nav_fin:'Finanzas',nav_cfg:'Configuración',role:'Administradora',search:'Buscar paciente...',hi:'Bienvenida',k_act:'Pacientes activos',k_proc:'Procedimientos',k_rev:'Ingresos totales',k_tick:'Ticket promedio',patients:'Pacientes',new_pat:'Nuevo paciente',back:'Volver',new_proc:'Registrar procedimiento',f_name:'Nombre',f_birth:'Nacimiento',f_phone:'Teléfono',f_skin:'Tipo de piel',f_proc:'Procedimiento',f_product:'Producto',f_value:'Valor (R$)',cancel:'Cancelar',save:'Guardar',skin_dry:'Seca',skin_sens:'Sensible',p_fill:'Relleno',p_bio:'Bioestimulador',demo:'Modo demo — datos en memoria',soon_t:'En construcción',soon_d:'Esta sección llega en las próximas fases (Agenda, Cotizador…).',skin:'Tipo de piel',allergy:'Alergias',pref:'Preferencias',tl:'Historial de tratamientos',add_proc:'+ Procedimiento',procs_n:'procedimientos',since:'Cliente'}};
+const tr=k=>T[lang][k]||k;
+function setLang(l){lang=l;document.getElementById('pt').classList.toggle('on',l==='pt');document.getElementById('es').classList.toggle('on',l==='es');
+  document.querySelectorAll('[data-i18n]').forEach(e=>{const k=e.getAttribute('data-i18n');if(T[l][k])e.textContent=T[l][k];});
+  document.querySelectorAll('[data-i18n-ph]').forEach(e=>{const k=e.getAttribute('data-i18n-ph');if(T[l][k])e.placeholder=T[l][k];});
+  renderPatients();if(currentPatient)renderDetail();renderDash();document.documentElement.lang=l;}
+
+/* ---------- Render ---------- */
+function renderDash(){const s=store.stats();kpiPatients.textContent=s.patients;kpiProcs.textContent=s.procs;kpiRev.textContent=money(s.rev);kpiTicket.textContent=money(s.ticket);}
+function renderPatients(){
+  const q=(document.getElementById('q').value||'').toLowerCase();
+  const list=store.patients.filter(p=>p.name.toLowerCase().includes(q));
+  document.getElementById('plist').innerHTML=list.map(p=>{
+    const spent=p.procs.reduce((a,b)=>a+b.value,0);
+    return `<div class="card pcard" onclick="openDetail(${p.id})"><div class="avatar">${initials(p.name)}</div>
+      <div><div class="nm">${p.name}${p.vip?'<span class="vip">VIP</span>':''}</div><div class="mt">${p.procs.length} ${tr('procs_n')} · ${p.skin}</div></div>
+      <div class="chip"><b>${money(spent)}</b><small>LTV</small></div></div>`;}).join('');
+}
+function openDetail(id){currentPatient=store.patients.find(p=>p.id===id);renderDetail();show('detail');}
+function renderDetail(){
+  const p=currentPatient;if(!p)return;const spent=p.procs.reduce((a,b)=>a+b.value,0);
+  document.getElementById('detailCard').innerHTML=`
+    <div class="phead"><div class="avatar">${initials(p.name)}</div>
+      <div><div style="font-size:20px;font-weight:600">${p.name}${p.vip?'<span class="vip">VIP</span>':''}</div>
+        <div class="muted" style="font-size:13px;margin-top:3px">${p.birth} · ${p.phone}</div></div>
+      <div class="facts">
+        <div class="fact"><small>${tr('skin')}</small><b>${p.skin}</b></div>
+        <div class="fact"><small>${tr('allergy')}</small><b>${p.allergy}</b></div>
+        <div class="fact"><small>${tr('pref')}</small><b>${p.pref}</b></div>
+        <div class="fact"><small>LTV</small><b>${money(spent)}</b></div>
+      </div></div>
+    <div class="section-t"><span>${tr('tl')}</span><button class="btn" onclick="openProcModal()">${tr('add_proc')}</button></div>
+    <div id="procList">${p.procs.map(pr=>`<div class="proc"><div class="dot"></div><div><div class="pn">${pr.name}</div><div class="pd">${pr.product} · ${pr.date}</div></div><div class="pv">${money(pr.value)}</div></div>`).join('')||`<div class="muted" style="font-size:13px">—</div>`}</div>`;
+}
+function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('show'));document.getElementById(v).classList.add('show');
+  document.querySelectorAll('.nav a,.mobilenav a').forEach(a=>a.classList.toggle('active',a.dataset.view===v));
+  if(v==='dash')renderDash();document.querySelector('.content').scrollTop=0;}
+
+/* ---------- Modals ---------- */
+function openPatientModal(){npName.value='';npBirth.value='';npPhone.value='';document.getElementById('ovPatient').classList.add('show');}
+function savePatient(){if(!npName.value.trim())return;store.addPatient({name:npName.value.trim(),birth:npBirth.value||'—',phone:npPhone.value||'—',skin:npSkin.value,allergy:'Nenhuma',pref:'—'});closeModal('ovPatient');renderPatients();}
+function openProcModal(){prProduct.value='';prValue.value='';document.getElementById('ovProc').classList.add('show');}
+function saveProc(){const v=parseInt(prValue.value||'0',10);if(!v)return;const d=new Date();const date=('0'+d.getDate()).slice(-2)+'/'+('0'+(d.getMonth()+1)).slice(-2)+'/'+String(d.getFullYear()).slice(-2);
+  store.addProc(currentPatient.id,{name:prName.value,product:prProduct.value||'—',value:v,date});closeModal('ovProc');renderDetail();}
+function closeModal(id){document.getElementById(id).classList.remove('show');}
+
+document.querySelectorAll('[data-view]').forEach(a=>a.addEventListener('click',()=>show(a.dataset.view)));
+document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
+renderPatients();renderDash();
+</script>
+</body>
+</html>
