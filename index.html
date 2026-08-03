@@ -401,6 +401,8 @@
     <p id="fcSub" class="muted" style="font-size:12px;margin-top:-8px;margin-bottom:12px;line-height:1.5">Se usa para calcular el costo real y la utilidad neta en Finanzas. Puedes ajustar cuando quieras — no afecta el flujo de cotizar.</p>
     <div class="field"><label id="fcHourLbl">Costo por hora de consultorio (solo mano de obra — sin renta)</label><input id="fcHourly" type="number" placeholder="0"></div>
     <div class="field"><label id="fcDurLbl">Duración promedio por atención (min)</label><input id="fcDuration" type="number" placeholder="45"></div>
+    <div class="field"><label id="fcSuppliesLbl">Costo promedio de insumos generales por atención (MXN)</label><input id="fcSupplies" type="number" placeholder="0"></div>
+    <div id="fcSuppliesNote" class="muted" style="font-size:11px;margin-top:-8px;margin-bottom:12px;line-height:1.5">Guantes, agujas, gasas, papel, café/agua para la paciente, etc. — no hace falta anotarlo en cada cita, se aplica solo como promedio.</div>
     <div class="field"><label id="fcFeesLbl" style="margin-bottom:6px;display:block">Comisión de la terminal por forma de pago (%, ya con IVA incluido)</label>
       <div style="display:flex;flex-direction:column;gap:6px">
         <div style="display:flex;align-items:center;gap:8px"><span id="fcL_efectivo" style="flex:1;font-size:12.5px">Efectivo</span><input id="fcFee_efectivo" type="number" step="0.01" style="width:80px"></div>
@@ -538,7 +540,7 @@ const ALL_ITEMS={}; CATALOG.forEach(c=>c.items.forEach(i=>{ALL_ITEMS[i.id]={...i
 
 let patients=[],quotes=[],anamneses=[],photos=[],expenses=[],productCosts=[],CLINIC_ID=null,currentPatient=null,lang='es',signupMode=false,cart=[],discPct=null;
 /* Defaults calculados a partir de Getnet Visa/Master (contado 0.70%+16%IVA, 3msi 0.70+3.50+16%, 6msi 0.70+5.50+16%) */
-let finSettings={hourly_cost_cents:0,avg_duration_min:45,fee_efectivo:0,fee_transferencia:0,fee_debito:0.81,fee_credito:0.81,fee_credito_3msi:4.87,fee_credito_6msi:7.19};
+let finSettings={hourly_cost_cents:0,avg_duration_min:45,supplies_cost_cents:0,fee_efectivo:0,fee_transferencia:0,fee_debito:0.81,fee_credito:0.81,fee_credito_3msi:4.87,fee_credito_6msi:7.19};
 const money=v=>'$'+(Math.round(v)||0).toLocaleString('es-MX');
 const initials=n=>(n||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
 const fmtDate=d=>{if(!d)return '—';const p=String(d).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0].slice(2)}`:d;};
@@ -744,7 +746,7 @@ function renderCloseQuoteModal(){
   el.innerHTML=`<h3>${L('Fechar cotización','Fechar cotização')}</h3>
     <div class="wz-sub" style="margin-bottom:10px">${L('Confirma lo realmente aplicado en cada tratamiento — puedes escribir o escanear la caja del producto.','Confirme o que foi realmente aplicado em cada tratamento — você pode digitar ou escanear a caixa do produto.')}</div>
     ${cqRows.map((r,i)=>`<div class="field" style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
-      <label>${r.name}</label>
+      <div style="display:flex;align-items:center;gap:6px"><label style="flex:1;margin:0">${r.name}</label><span class="rm" style="cursor:pointer;font-size:12px" onclick="cqRemoveRow(${i})">✕ ${L('quitar','remover')}</span></div>
       <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
         <input id="cqProduct_${i}" placeholder="${L('Producto / marca','Produto / marca')}" value="${(r.product||'').replace(/"/g,'&quot;')}" style="flex:1.3">
         <input id="cqLot_${i}" placeholder="${L('Lote','Lote')}" value="${(r.lot||'').replace(/"/g,'&quot;')}" style="flex:1">
@@ -765,9 +767,23 @@ function renderCloseQuoteModal(){
         <input id="cqPrice_${i}" type="number" value="${r.finalPrice}" style="width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 6px" onchange="cqSync()"> MXN
         <small style="color:var(--muted);margin-left:10px">${L('Costo del producto','Custo do produto')}</small>
         <input id="cqCost_${i}" type="number" value="${r.cost||''}" placeholder="${L('opcional','opcional')}" style="width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 6px" onchange="cqSync()"> MXN
-      </div></div>`).join('')}
+      </div></div>`).join('')||`<div class="empty">${L('Sin tratamientos — agrega al menos uno abajo.','Sem tratamentos — adicione ao menos um abaixo.')}</div>`}
+    <div style="display:flex;gap:6px;align-items:center;margin:14px 0">
+      <select id="cqAddSel" style="flex:1;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;padding:6px 8px">${Object.values(ALL_ITEMS).map(i=>`<option value="${i.id}">${i.name} — ${money(i.price)}</option>`).join('')}</select>
+      <button class="btn sm ghost" onclick="cqAddItem()">+ ${L('Agregar tratamiento','Adicionar tratamento')}</button>
+    </div>
+    <div class="wz-sub" style="margin-bottom:4px">${L('¿La paciente decidió hacer algo más hoy (otra zona, otro producto)? Agrégalo aquí — no hace falta crear una cotización nueva.','A paciente decidiu fazer mais alguma coisa hoje (outra zona, outro produto)? Adicione aqui — não precisa criar uma cotização nova.')}</div>
+    <div class="tot-row grand"><span>${L('Total a cobrar','Total a cobrar')}</span><span class="v">${money(cqRows.reduce((a,r)=>a+(r.finalPrice||0),0))}</span></div>
     <div class="modal-actions"><button class="btn ghost" onclick="closeCqModal()">${L('Cancelar','Cancelar')}</button><button class="btn" id="cqConfirmBtn" onclick="confirmCloseQuote()">${L('Fechar y registrar','Fechar e registrar')}</button></div>`;
   cqRows.forEach((r,i)=>{const sel=document.getElementById('cqInsumo_'+i);if(sel&&r.insumoId)sel.value=r.insumoId;if(r.insumoId&&r.insumoQty)cqCalcCost(i);});
+}
+function cqRemoveRow(i){cqSync();cqRows.splice(i,1);renderCloseQuoteModal();}
+function cqAddItem(){
+  cqSync();
+  const id=document.getElementById('cqAddSel').value;
+  const it=ALL_ITEMS[id];if(!it)return;
+  cqRows.push({id,name:it.name,price:it.price,qty:1,product:'',lot:'',qtyApplied:'',area:'',finalPrice:it.price,cost:'',insumoId:'',insumoQty:''});
+  renderCloseQuoteModal();
 }
 function cqScanClick(i){cqSync();cqScanIdx=i;document.getElementById('cqScanInput').click();}
 async function cqScanFile(file){
@@ -796,6 +812,7 @@ async function cqScanFile(file){
 async function confirmCloseQuote(){
   if(!cqQuote)return;
   cqSync();
+  if(!cqRows.length){toast(L('Agrega al menos un tratamiento.','Adicione ao menos um tratamento.'));return;}
   const today=new Date().toISOString().slice(0,10);
   const recs=cqRows.map(r=>({patient_id:cqQuote.patient_id,name:r.name,
     product:[r.product,r.lot?('Lote '+r.lot):''].filter(Boolean).join(' · ')||null,
@@ -1127,9 +1144,11 @@ function renderFinance(){
   const{items:expList,total:expM}=expensesForMonth(mm);
   const{total:expPM}=expensesForMonth(pmm);
   const laborTotal=laborPerProc*cnt,laborTotalP=laborPerProc*cntP;
+  const suppliesPerProc=(finSettings.supplies_cost_cents||0)/100;
+  const suppliesTotal=suppliesPerProc*cnt,suppliesTotalP=suppliesPerProc*cntP;
 
   const margin=rev-cost,marginP=revP-costP;
-  const totalCosts=cost+laborTotal+feeTotal+expM,totalCostsP=costP+laborTotalP+feeTotalP+expPM;
+  const totalCosts=cost+laborTotal+suppliesTotal+feeTotal+expM,totalCostsP=costP+laborTotalP+suppliesTotalP+feeTotalP+expPM;
   const net=rev-totalCosts,netP=revP-totalCostsP;
   const marginPct=rev>0?Math.round(margin/rev*100):0,netPct=rev>0?Math.round(net/rev*100):0;
   const delta=(cur,prev)=>prev>0?Math.round((cur-prev)/prev*100):(cur>0?100:0);
@@ -1151,10 +1170,11 @@ function renderFinance(){
     <div class="tot-row"><span>${L('Ingresos','Receita')}</span><span>${money(rev)}</span></div>
     <div class="tot-row"><span style="color:var(--muted)">− ${L('Costo de productos','Custo de produtos')}</span><span style="color:var(--muted)">${money(cost)}</span></div>
     <div class="tot-row"><span style="color:var(--muted)">− ${L('Mano de obra estimada','Mão de obra estimada')}</span><span style="color:var(--muted)">${money(laborTotal)}</span></div>
+    <div class="tot-row"><span style="color:var(--muted)">− ${L('Insumos generales estimados','Insumos gerais estimados')}</span><span style="color:var(--muted)">${money(suppliesTotal)}</span></div>
     <div class="tot-row"><span style="color:var(--muted)">− ${L('Comisión de terminal estimada','Taxa de cartão estimada')}</span><span style="color:var(--muted)">${money(feeTotal)}</span></div>
     <div class="tot-row"><span style="color:var(--muted)">− ${L('Gastos fijos del mes','Despesas fixas do mês')}</span><span style="color:var(--muted)">${money(expM)}</span></div>
     <div class="tot-row grand"><span>${L('Utilidad neta real','Lucro líquido real')}</span><span class="v">${money(net)}</span></div>
-    <div class="muted" style="font-size:11px;margin-top:10px;line-height:1.5">${L('Mano de obra: ','Mão de obra: ')}${finSettings.avg_duration_min}min × ${money((finSettings.hourly_cost_cents||0)/100)}/h ${L('(configurable en ⚙ Configuración).','(configurável em ⚙ Configuração).')} ${L('Comisión calculada en ','Taxa calculada em ')}${feeCoveredCnt}/${cnt} ${L('procedimientos (los demás no tienen forma de pago registrada).','procedimentos (os demais não têm forma de pagamento registrada).')}</div>
+    <div class="muted" style="font-size:11px;margin-top:10px;line-height:1.5">${L('Mano de obra: ','Mão de obra: ')}${finSettings.avg_duration_min}min × ${money((finSettings.hourly_cost_cents||0)/100)}/h · ${L('Insumos generales: ','Insumos gerais: ')}${money(suppliesPerProc)}/${L('atención','atendimento')} ${L('(configurable en ⚙ Configuración).','(configurável em ⚙ Configuração).')} ${L('Comisión calculada en ','Taxa calculada em ')}${feeCoveredCnt}/${cnt} ${L('procedimientos (los demás no tienen forma de pago registrada).','procedimentos (os demais não têm forma de pagamento registrada).')}</div>
   </div>
   <div class="card" style="margin-top:12px">
     <div class="section-t" style="margin:0 0 6px"><span>📊 ${L('Tratamientos del mes','Tratamentos do mês')} · ${monthLbl(mm)}</span></div>
@@ -1189,6 +1209,8 @@ function openFinConfig(){
   document.getElementById('fcSub').textContent=L('Se usa para calcular el costo real y la utilidad neta en Finanzas. Puedes ajustar cuando quieras — no afecta el flujo de cotizar.','Usado para calcular o custo real e o lucro líquido em Financeiro. Você pode ajustar quando quiser — não muda o fluxo de cotizar.');
   document.getElementById('fcHourLbl').textContent=L('Costo por hora de consultorio (solo mano de obra — sin renta)','Custo por hora de consultório (só mão de obra — sem aluguel)');
   document.getElementById('fcDurLbl').textContent=L('Duración promedio por atención (min)','Duração média por atendimento (min)');
+  document.getElementById('fcSuppliesLbl').textContent=L('Costo promedio de insumos generales por atención (MXN)','Custo médio de insumos gerais por atendimento (MXN)');
+  document.getElementById('fcSuppliesNote').textContent=L('Guantes, agujas, gasas, papel, café/agua para la paciente, etc. — no hace falta anotarlo en cada cita, se aplica solo como promedio.','Luvas, agulhas, gaze, papel, café/água pra paciente etc. — não precisa anotar em cada consulta, entra sozinho como média.');
   document.getElementById('fcFeesLbl').textContent=L('Comisión de la terminal por forma de pago (%, ya con IVA incluido)','Comissão da maquininha por forma de pagamento (%, já com IVA incluído)');
   document.getElementById('fcL_efectivo').textContent=L('Efectivo','Efetivo');
   document.getElementById('fcL_transferencia').textContent=L('Transferencia','Transferência');
@@ -1200,6 +1222,7 @@ function openFinConfig(){
   document.getElementById('fcBtnLbl').textContent=L('Configuración','Configuração');
   fcHourly.value=(finSettings.hourly_cost_cents||0)/100;
   fcDuration.value=finSettings.avg_duration_min||45;
+  fcSupplies.value=(finSettings.supplies_cost_cents||0)/100;
   fcFee_efectivo.value=finSettings.fee_efectivo;fcFee_transferencia.value=finSettings.fee_transferencia;
   fcFee_debito.value=finSettings.fee_debito;fcFee_credito.value=finSettings.fee_credito;
   fcFee_credito3msi.value=finSettings.fee_credito_3msi;fcFee_credito6msi.value=finSettings.fee_credito_6msi;
@@ -1209,6 +1232,7 @@ async function saveFinConfig(){
   const rec={
     hourly_cost_cents:Math.round(parseFloat(document.getElementById('fcHourly').value||'0')*100),
     avg_duration_min:parseInt(document.getElementById('fcDuration').value||'45',10),
+    supplies_cost_cents:Math.round(parseFloat(document.getElementById('fcSupplies').value||'0')*100),
     fee_efectivo:parseFloat(document.getElementById('fcFee_efectivo').value||'0'),
     fee_transferencia:parseFloat(document.getElementById('fcFee_transferencia').value||'0'),
     fee_debito:parseFloat(document.getElementById('fcFee_debito').value||'0'),
