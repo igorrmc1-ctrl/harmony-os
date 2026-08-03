@@ -347,7 +347,7 @@
   </div>
 
   <!-- Modais -->
-  <div class="overlay" id="ovPatient"><div class="modal"><h3 data-i18n="new_pat">Novo paciente</h3>
+  <div class="overlay" id="ovPatient"><div class="modal"><h3 id="ovPatientTitle" data-i18n="new_pat">Novo paciente</h3>
     <div class="field"><label data-i18n="f_name">Nome</label><input id="npName"></div>
     <div class="field"><label data-i18n="f_phone">Telefone</label>
       <div style="display:flex;gap:6px">
@@ -356,7 +356,6 @@
     <div class="field"><label data-i18n="f_email">Email</label><input id="npEmail" type="email" placeholder="paciente@email.com"></div>
     <div class="field"><label data-i18n="f_instagram">Instagram</label><input id="npInstagram" placeholder="@usuario"></div>
     <div class="field"><label data-i18n="f_birth">Nascimento</label><input id="npBirth" type="date"></div>
-    <div class="field"><label data-i18n="f_skin">Tipo de pele</label><select id="npSkin"><option>Normal</option><option>Mixta</option><option>Grasa</option><option>Seca</option><option>Sensible</option></select></div>
     <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovPatient')" data-i18n="cancel">Cancelar</button><button class="btn" id="savePatBtn" onclick="savePatient()" data-i18n="save">Salvar</button></div></div></div>
 
   <div class="overlay" id="ovProc"><div class="modal"><h3 data-i18n="new_proc">Registrar procedimento</h3>
@@ -447,7 +446,7 @@
   <input type="file" id="phBulkInput" accept="image/*" multiple style="display:none" onchange="phBulkFiles(this.files)">
 
   <!-- MODAL NOVA CITA -->
-  <div class="overlay" id="ovAppt"><div class="modal"><h3 data-i18n="new_appt">Nueva cita</h3>
+  <div class="overlay" id="ovAppt"><div class="modal"><h3 id="ovApptTitle" data-i18n="new_appt">Nueva cita</h3>
     <div class="field"><label data-i18n="f_patient">Paciente</label><select id="apPatient"></select></div>
     <div class="field"><label data-i18n="f_date">Fecha</label><input id="apDate" type="date"></div>
     <div class="field"><label data-i18n="f_time">Hora</label><input id="apTime" type="time"></div>
@@ -494,17 +493,60 @@ const COUNTRIES=[
   {cc:'52',flag:'🇲🇽',label:'México'},
   {cc:'1',flag:'🇺🇸',label:'Estados Unidos'},
   {cc:'1',flag:'🇨🇦',label:'Canadá'},
-  {cc:'55',flag:'🇧🇷',label:'Brasil'},
-  {cc:'34',flag:'🇪🇸',label:'España'},
-  {cc:'57',flag:'🇨🇴',label:'Colombia'},
   {cc:'54',flag:'🇦🇷',label:'Argentina'},
+  {cc:'591',flag:'🇧🇴',label:'Bolivia'},
+  {cc:'55',flag:'🇧🇷',label:'Brasil'},
   {cc:'56',flag:'🇨🇱',label:'Chile'},
-  {cc:'51',flag:'🇵🇪',label:'Perú'},
-  {cc:'593',flag:'🇪🇨',label:'Ecuador'},
-  {cc:'507',flag:'🇵🇦',label:'Panamá'},
+  {cc:'57',flag:'🇨🇴',label:'Colombia'},
   {cc:'506',flag:'🇨🇷',label:'Costa Rica'},
+  {cc:'53',flag:'🇨🇺',label:'Cuba'},
+  {cc:'593',flag:'🇪🇨',label:'Ecuador'},
+  {cc:'503',flag:'🇸🇻',label:'El Salvador'},
   {cc:'502',flag:'🇬🇹',label:'Guatemala'},
-  {cc:'598',flag:'🇺🇾',label:'Uruguay'}
+  {cc:'504',flag:'🇭🇳',label:'Honduras'},
+  {cc:'505',flag:'🇳🇮',label:'Nicaragua'},
+  {cc:'507',flag:'🇵🇦',label:'Panamá'},
+  {cc:'595',flag:'🇵🇾',label:'Paraguay'},
+  {cc:'51',flag:'🇵🇪',label:'Perú'},
+  {cc:'1',flag:'🇵🇷',label:'Puerto Rico'},
+  {cc:'1',flag:'🇩🇴',label:'República Dominicana'},
+  {cc:'598',flag:'🇺🇾',label:'Uruguay'},
+  {cc:'58',flag:'🇻🇪',label:'Venezuela'},
+  {cc:'34',flag:'🇪🇸',label:'España'},
+  {cc:'351',flag:'🇵🇹',label:'Portugal'},
+  {cc:'33',flag:'🇫🇷',label:'Francia'},
+  {cc:'39',flag:'🇮🇹',label:'Italia'},
+  {cc:'49',flag:'🇩🇪',label:'Alemania'},
+  {cc:'44',flag:'🇬🇧',label:'Reino Unido'},
+  {cc:'31',flag:'🇳🇱',label:'Países Bajos'},
+  {cc:'32',flag:'🇧🇪',label:'Bélgica'},
+  {cc:'41',flag:'🇨🇭',label:'Suiza'},
+  {cc:'43',flag:'🇦🇹',label:'Austria'},
+  {cc:'353',flag:'🇮🇪',label:'Irlanda'},
+  {cc:'46',flag:'🇸🇪',label:'Suecia'},
+  {cc:'47',flag:'🇳🇴',label:'Noruega'},
+  {cc:'45',flag:'🇩🇰',label:'Dinamarca'},
+  {cc:'358',flag:'🇫🇮',label:'Finlandia'},
+  {cc:'48',flag:'🇵🇱',label:'Polonia'},
+  {cc:'30',flag:'🇬🇷',label:'Grecia'},
+  {cc:'7',flag:'🇷🇺',label:'Rusia'},
+  {cc:'86',flag:'🇨🇳',label:'China'},
+  {cc:'81',flag:'🇯🇵',label:'Japón'},
+  {cc:'82',flag:'🇰🇷',label:'Corea del Sur'},
+  {cc:'91',flag:'🇮🇳',label:'India'},
+  {cc:'972',flag:'🇮🇱',label:'Israel'},
+  {cc:'971',flag:'🇦🇪',label:'Emiratos Árabes Unidos'},
+  {cc:'966',flag:'🇸🇦',label:'Arabia Saudita'},
+  {cc:'90',flag:'🇹🇷',label:'Turquía'},
+  {cc:'63',flag:'🇵🇭',label:'Filipinas'},
+  {cc:'66',flag:'🇹🇭',label:'Tailandia'},
+  {cc:'65',flag:'🇸🇬',label:'Singapur'},
+  {cc:'61',flag:'🇦🇺',label:'Australia'},
+  {cc:'64',flag:'🇳🇿',label:'Nueva Zelanda'},
+  {cc:'27',flag:'🇿🇦',label:'Sudáfrica'},
+  {cc:'212',flag:'🇲🇦',label:'Marruecos'},
+  {cc:'234',flag:'🇳🇬',label:'Nigeria'},
+  {cc:'20',flag:'🇪🇬',label:'Egipto'}
 ];
 
 /* ============ CATÁLOGO REAL HARMONY (MXN) ============ */
@@ -616,10 +658,15 @@ async function savePatient(){
   if(!name||!phoneDigits||!(email||instagram)){toast(tr('need_pat_min'));return;}
   const cc=document.getElementById('npCC').value;
   const phone='+'+cc+' '+phoneDigits;
-  const rec={full_name:name,birth_date:document.getElementById('npBirth').value||null,phone,email:email||null,instagram:instagram||null,skin_type:document.getElementById('npSkin').value};
-  if(DEMO){patients.push({id:'d'+Date.now(),...rec,procedures:[]});}
-  else{const btn=document.getElementById('savePatBtn');btn.disabled=true;const{error}=await db.from('patients').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
-  closeModal('ovPatient');renderAll();toast(tr('pat_saved'));
+  const rec={full_name:name,birth_date:document.getElementById('npBirth').value||null,phone,email:email||null,instagram:instagram||null};
+  if(editingPatientId){
+    if(DEMO){const p=patients.find(x=>x.id===editingPatientId);if(p)Object.assign(p,rec);}
+    else{const btn=document.getElementById('savePatBtn');btn.disabled=true;const{error}=await db.from('patients').update(rec).eq('id',editingPatientId);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();currentPatient=patients.find(p=>p.id===editingPatientId)||currentPatient;}
+  }else{
+    if(DEMO){patients.push({id:'d'+Date.now(),...rec,procedures:[]});}
+    else{const btn=document.getElementById('savePatBtn');btn.disabled=true;const{error}=await db.from('patients').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
+  }
+  closeModal('ovPatient');renderAll();if(currentPatient)renderDetail();toast(tr('pat_saved'));
 }
 async function saveProc(){
   const v=parseInt(document.getElementById('prValue').value||'0',10);if(!v)return;
@@ -1324,11 +1371,25 @@ function startQuoteFor(pid){show('cot');const sel=document.getElementById('qPati
 function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('show'));document.getElementById(v).classList.add('show');
   document.querySelectorAll('.nav a,.mobilenav a').forEach(a=>a.classList.toggle('active',a.dataset.view===v));
   if(v==='dash')renderDash();if(v==='age')renderAgenda();if(v==='fin')renderFinance();document.querySelector('.content').scrollTop=0;}
+let editingPatientId=null;
 function openPatientModal(){
+  editingPatientId=null;
+  document.getElementById('ovPatientTitle').textContent=tr('new_pat');
   npName.value='';npBirth.value='';npPhone.value='';npEmail.value='';npInstagram.value='';
   const ccSel=document.getElementById('npCC');
   ccSel.innerHTML=COUNTRIES.map(c=>`<option value="${c.cc}">${c.flag} +${c.cc} ${c.label}</option>`).join('');
   ccSel.value='52';
+  document.getElementById('ovPatient').classList.add('show');
+}
+function openEditPatientModal(){
+  const p=currentPatient;if(!p)return;
+  editingPatientId=p.id;
+  document.getElementById('ovPatientTitle').textContent=L('Editar paciente','Editar paciente');
+  const ccSel=document.getElementById('npCC');
+  ccSel.innerHTML=COUNTRIES.map(c=>`<option value="${c.cc}">${c.flag} +${c.cc} ${c.label}</option>`).join('');
+  const m=String(p.phone||'').match(/^\+(\d+)\s*(.*)$/);
+  ccSel.value=m?m[1]:'52';npPhone.value=m?m[2]:(p.phone||'');
+  npName.value=p.full_name||'';npBirth.value=p.birth_date||'';npEmail.value=p.email||'';npInstagram.value=p.instagram||'';
   document.getElementById('ovPatient').classList.add('show');
 }
 function openProcModal(){
@@ -1436,7 +1497,8 @@ function renderDetail(){
       <div style="display:flex;gap:8px;margin-top:14px;width:100%;flex-wrap:wrap">
         ${p.phone?`<button class="wa" onclick="window.open(waLink(currentPatient),'_blank')">💬 WhatsApp</button>`:''}
         <button class="btn" style="flex:1;min-width:130px" onclick="startQuoteFor('${p.id}')">+ ${L('Cotización','Cotização')}</button>
-        <button class="btn ghost" onclick="openProcModal()">+ ${L('Procedimiento','Procedimento')}</button></div>
+        <button class="btn ghost" onclick="openProcModal()">+ ${L('Procedimiento','Procedimento')}</button>
+        <button class="btn ghost" onclick="openEditPatientModal()">✏️ ${L('Editar','Editar')}</button></div>
    </div>
    <div class="ptabs">
      <button class="${pTab==='res'?'on':''}" onclick="setPTab('res')">${L('Resumen','Resumo')}</button>
@@ -1798,12 +1860,32 @@ function renderAgenda(){
       <span class="stbadge st-${a.status}" style="margin-left:auto">${stl(a.status)}</span></div>`;}).join('')
     :`<div class="empty">${L('Sin citas este día.','Sem consultas neste dia.')}</div>`);
 }
+let editingApptId=null;
 function openApptModal(){
+  editingApptId=null;
+  document.getElementById('ovApptTitle').textContent=L('Nueva cita','Nova consulta');
   const sel=document.getElementById('apPatient');
   sel.innerHTML=patients.map(p=>`<option value="${p.id}">${p.full_name}</option>`).join('');
   document.getElementById('apTreat').innerHTML=['Valoración'].concat(Object.values(ALL_ITEMS).map(i=>i.name)).map(n=>`<option>${n}</option>`).join('');
   document.getElementById('apDate').value=agDate||localISO(new Date());
-  document.getElementById('apTime').value='10:00';document.getElementById('apNotes').value='';
+  document.getElementById('apTime').value='10:00';document.getElementById('apNotes').value='';document.getElementById('apDur').value='60';
+  document.getElementById('ovAppt').classList.add('show');
+}
+function openEditApptModal(){
+  if(!curAppt)return;
+  editingApptId=curAppt.id;
+  document.getElementById('ovApptTitle').textContent=L('Editar cita','Editar consulta');
+  const sel=document.getElementById('apPatient');
+  sel.innerHTML=patients.map(p=>`<option value="${p.id}">${p.full_name}</option>`).join('');
+  document.getElementById('apTreat').innerHTML=['Valoración'].concat(Object.values(ALL_ITEMS).map(i=>i.name)).map(n=>`<option>${n}</option>`).join('');
+  sel.value=curAppt.patient_id||'';
+  const st=new Date(curAppt.starts_at);
+  document.getElementById('apDate').value=localISO(st);
+  document.getElementById('apTime').value=String(st.getHours()).padStart(2,'0')+':'+String(st.getMinutes()).padStart(2,'0');
+  document.getElementById('apDur').value=String(curAppt.duration_min||60);
+  document.getElementById('apTreat').value=curAppt.treatment||'Valoración';
+  document.getElementById('apNotes').value=curAppt.notes||'';
+  closeModal('ovApptAct');
   document.getElementById('ovAppt').classList.add('show');
 }
 async function saveAppt(){
@@ -1812,10 +1894,17 @@ async function saveAppt(){
   const rec={patient_id:document.getElementById('apPatient').value||null,
     starts_at:new Date(date+'T'+time).toISOString(),
     duration_min:parseInt(document.getElementById('apDur').value,10)||60,
-    treatment:document.getElementById('apTreat').value,notes:document.getElementById('apNotes').value||null,status:'programada'};
-  if(DEMO){appts.push({id:'ap'+Date.now(),...rec});}
-  else{const btn=document.getElementById('saveApptBtn');btn.disabled=true;const{error}=await db.from('appointments').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
-  closeModal('ovAppt');agDate=date;renderAgenda();renderDash();toast(L('Cita creada ✅','Consulta criada ✅'));
+    treatment:document.getElementById('apTreat').value,notes:document.getElementById('apNotes').value||null};
+  if(editingApptId){
+    if(DEMO){const a=appts.find(x=>x.id===editingApptId);if(a)Object.assign(a,rec);}
+    else{const btn=document.getElementById('saveApptBtn');btn.disabled=true;const{error}=await db.from('appointments').update(rec).eq('id',editingApptId);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
+    closeModal('ovAppt');agDate=date;renderAgenda();renderDash();toast(L('Cita actualizada ✅','Consulta atualizada ✅'));
+  }else{
+    rec.status='programada';
+    if(DEMO){appts.push({id:'ap'+Date.now(),...rec});}
+    else{const btn=document.getElementById('saveApptBtn');btn.disabled=true;const{error}=await db.from('appointments').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
+    closeModal('ovAppt');agDate=date;renderAgenda();renderDash();toast(L('Cita creada ✅','Consulta criada ✅'));
+  }
 }
 function openApptAct(id){
   curAppt=appts.find(a=>a.id===id);if(!curAppt)return;
@@ -1825,7 +1914,8 @@ function openApptAct(id){
     <div class="muted" style="font-size:12.5px;margin:-6px 0 14px">${fmtDate(curAppt.starts_at)} · ${curAppt.treatment||''} · ${curAppt.duration_min}min</div>
     ${p&&p.phone?`<button class="wa" style="width:100%;justify-content:center;margin-bottom:8px" onclick="waConfirm()">💬 ${L('Confirmar por WhatsApp','Confirmar por WhatsApp')}</button>`:''}
     <button class="btn ghost full" style="margin-bottom:8px" onclick="icsDownload()">📅 ${L('Agregar a mi calendario (.ics)','Adicionar ao meu calendário (.ics)')}</button>
-    ${p?`<button class="btn ghost full" style="margin-bottom:14px" onclick="closeModal('ovApptAct');openDetail('${p.id}')">☺ ${L('Ver paciente','Ver paciente')}</button>`:''}
+    ${p?`<button class="btn ghost full" style="margin-bottom:8px" onclick="closeModal('ovApptAct');openDetail('${p.id}')">☺ ${L('Ver paciente','Ver paciente')}</button>`:''}
+    <button class="btn ghost full" style="margin-bottom:14px" onclick="openEditApptModal()">✏️ ${L('Editar cita','Editar consulta')}</button>
     <label style="font-size:12px;color:var(--muted)">${L('Estado','Status')}</label>
     <div class="stbtns">${STATUSES.map(s=>`<button class="${curAppt.status===s?'on':''}" onclick="setApptStatus('${s}')">${stl(s)}</button>`).join('')}</div>`;
   document.getElementById('ovApptAct').classList.add('show');
