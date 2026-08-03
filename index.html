@@ -257,6 +257,7 @@
         <a class="active" data-view="pac"><span class="ic">☺</span><span data-i18n="nav_pac">Pacientes</span></a>
         <a data-view="cot"><span class="ic">✦</span><span data-i18n="nav_cot">Cotizador</span></a>
         <a data-view="age"><span class="ic">▦</span><span data-i18n="nav_age">Agenda</span></a>
+        <a data-view="fin"><span class="ic">💹</span><span data-i18n="nav_fin">Financeiro</span></a>
       </nav>
       <div class="side-foot"><div class="who"><div class="avatar" id="userAv">·</div><div><div id="userName" style="font-size:13px;font-weight:600">—</div><div class="muted" style="font-size:11px" data-i18n="role">Administradora</div></div></div><div class="logout" onclick="doLogout()" data-i18n="logout">Sair</div></div>
     </aside>
@@ -301,7 +302,7 @@
               <div class="fieldset" id="discReasonWrap" style="display:none"><label data-i18n="f_reason">Motivo do desconto</label><input id="qReason" placeholder="Ex.: paquete, cortesía, negociación"></div>
               <div class="fieldset"><label data-i18n="f_pay">Forma de pagamento</label><select id="qPay">
                 <option value="efectivo">Efectivo</option><option value="debito">Tarjeta de débito</option><option value="transferencia">Transferencia</option>
-                <option value="credito">Tarjeta de crédito (1x)</option><option value="credito-3msi">Crédito · 3 MSI</option>
+                <option value="credito">Tarjeta de crédito (1x)</option><option value="credito-3msi">Crédito · 3 MSI</option><option value="credito-6msi">Crédito · 6 MSI</option>
               </select></div>
               <div style="margin-top:14px">
                 <div class="tot-row"><span data-i18n="subtotal">Subtotal</span><span id="tSub">$0</span></div>
@@ -323,6 +324,12 @@
           <div id="agBody"></div>
         </div>
 
+        <!-- FINANCEIRO -->
+        <div id="fin" class="view">
+          <div class="page-head"><h1 data-i18n="nav_fin">Financeiro</h1><div style="display:flex;gap:8px;flex-wrap:wrap"><button class="btn ghost" onclick="openInsumosModal()">📦 <span id="insBtnLbl">Insumos</span></button><button class="btn ghost" onclick="openFinConfig()">⚙ <span id="fcBtnLbl">Configuración</span></button><button class="btn" onclick="openExpenseModal()">+ <span data-i18n="new_expense">Nova despesa</span></button></div></div>
+          <div id="finBody"></div>
+        </div>
+
         <!-- EM BREVE -->
         <div id="soon" class="view">
           <div class="card" style="text-align:center;padding:50px"><div style="font-size:34px">▦</div><h1 style="font-size:20px;margin:12px 0 6px" data-i18n="soon_t">Em construção</h1><p class="muted" data-i18n="soon_d">A Agenda entra na próxima fatia.</p></div>
@@ -335,6 +342,7 @@
      <a class="active" data-view="pac"><span class="ic">☺</span><span data-i18n="nav_pac">Pacientes</span></a>
      <a data-view="cot"><span class="ic">✦</span><span data-i18n="nav_cot">Cotizador</span></a>
      <a data-view="age"><span class="ic">▦</span><span data-i18n="nav_age">Agenda</span></a>
+     <a data-view="fin"><span class="ic">💹</span><span data-i18n="nav_fin">Financeiro</span></a>
    </nav>
   </div>
 
@@ -358,7 +366,70 @@
     <div class="field"><label data-i18n="f_qty">Cantidad aplicada</label><input id="prQty" placeholder="ej. 40U, 2.5ml"></div>
     <div class="field"><label data-i18n="f_area">Zona aplicada</label><input id="prArea" placeholder="ej. Frente + Glabela"></div>
     <div class="field"><label data-i18n="f_value">Valor (MXN)</label><input id="prValue" type="number"></div>
+    <div class="field"><label id="prInsumoLbl" style="margin-bottom:6px;display:block">Calcular costo por insumo (opcional)</label>
+      <div style="display:flex;gap:6px;align-items:center;flex-wrap:wrap">
+        <select id="prInsumo" onchange="prCalcCost()" style="flex:1.3"></select>
+        <input id="prInsumoQty" type="number" step="0.01" placeholder="cant." style="width:70px" oninput="prCalcCost()">
+        <small class="muted" id="prInsumoSuggest">—</small>
+      </div></div>
+    <div class="field"><label data-i18n="f_cost">Custo do produto (MXN)</label><input id="prCost" type="number" placeholder="opcional — para calcular margem"></div>
+    <div class="field"><label id="prPayLbl">Forma de pagamento</label><select id="prPayment">
+      <option value="">—</option><option value="efectivo">Efectivo</option><option value="debito">Débito</option><option value="transferencia">Transferência</option>
+      <option value="credito">Crédito (1x)</option><option value="credito-3msi">Crédito · 3 MSI</option><option value="credito-6msi">Crédito · 6 MSI</option>
+    </select></div>
     <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovProc')" data-i18n="cancel">Cancelar</button><button class="btn" id="saveProcBtn" onclick="saveProc()" data-i18n="save">Salvar</button></div></div></div>
+
+  <div class="overlay" id="ovExpense"><div class="modal"><h3 data-i18n="new_expense">Nova despesa</h3>
+    <div class="field"><label id="exDescLbl">Descrição</label><input id="exDesc" placeholder="ej. Renta del consultorio"></div>
+    <div class="field"><label id="exCatLbl">Categoría</label><select id="exCategory">
+      <option value="insumos">Insumos / productos</option>
+      <option value="renta">Renta</option>
+      <option value="salarios">Salarios</option>
+      <option value="marketing">Marketing</option>
+      <option value="otros">Otros</option>
+    </select></div>
+    <div class="field"><label id="exAmountLbl">Monto (MXN)</label><input id="exAmount" type="number"></div>
+    <div class="field"><label id="exDateLbl">Fecha</label><input id="exDate" type="date"></div>
+    <div class="field" style="display:flex;align-items:center;gap:8px;flex-direction:row">
+      <input id="exRecurring" type="checkbox" style="width:16px;height:16px;flex-shrink:0">
+      <label id="exRecurringLbl" style="margin:0">Repite todos los meses (ej. renta, marketing fijo) — no hace falta volver a registrarla</label>
+    </div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovExpense')" data-i18n="cancel">Cancelar</button><button class="btn" id="saveExpenseBtn" onclick="saveExpense()" data-i18n="save">Salvar</button></div></div></div>
+
+  <div class="overlay" id="ovFinConfig"><div class="modal" style="max-width:480px">
+    <h3 id="fcTitle">Configuración financiera</h3>
+    <p id="fcSub" class="muted" style="font-size:12px;margin-top:-8px;margin-bottom:12px;line-height:1.5">Se usa para calcular el costo real y la utilidad neta en Finanzas. Puedes ajustar cuando quieras — no afecta el flujo de cotizar.</p>
+    <div class="field"><label id="fcHourLbl">Costo por hora de consultorio (solo mano de obra — sin renta)</label><input id="fcHourly" type="number" placeholder="0"></div>
+    <div class="field"><label id="fcDurLbl">Duración promedio por atención (min)</label><input id="fcDuration" type="number" placeholder="45"></div>
+    <div class="field"><label id="fcFeesLbl" style="margin-bottom:6px;display:block">Comisión de la terminal por forma de pago (%, ya con IVA incluido)</label>
+      <div style="display:flex;flex-direction:column;gap:6px">
+        <div style="display:flex;align-items:center;gap:8px"><span id="fcL_efectivo" style="flex:1;font-size:12.5px">Efectivo</span><input id="fcFee_efectivo" type="number" step="0.01" style="width:80px"></div>
+        <div style="display:flex;align-items:center;gap:8px"><span id="fcL_transferencia" style="flex:1;font-size:12.5px">Transferencia</span><input id="fcFee_transferencia" type="number" step="0.01" style="width:80px"></div>
+        <div style="display:flex;align-items:center;gap:8px"><span id="fcL_debito" style="flex:1;font-size:12.5px">Débito</span><input id="fcFee_debito" type="number" step="0.01" style="width:80px"></div>
+        <div style="display:flex;align-items:center;gap:8px"><span id="fcL_credito" style="flex:1;font-size:12.5px">Crédito (1x)</span><input id="fcFee_credito" type="number" step="0.01" style="width:80px"></div>
+        <div style="display:flex;align-items:center;gap:8px"><span id="fcL_credito3" style="flex:1;font-size:12.5px">Crédito · 3 MSI</span><input id="fcFee_credito3msi" type="number" step="0.01" style="width:80px"></div>
+        <div style="display:flex;align-items:center;gap:8px"><span id="fcL_credito6" style="flex:1;font-size:12.5px">Crédito · 6 MSI</span><input id="fcFee_credito6msi" type="number" step="0.01" style="width:80px"></div>
+      </div>
+      <div id="fcNote" class="muted" style="font-size:11px;margin-top:8px;line-height:1.5">Valores iniciales calculados con las tasas de Getnet (Visa/Master) que nos pasaste. Si usas Clip o Amex con frecuencia, la comisión real es más alta (Clip contado ≈3,36%, Clip 3 MSI ≈8,67%, Clip 6 MSI ≈12,15%, Amex ≈4,18%) — ajusta el % promedio aquí si es tu caso.</div>
+    </div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovFinConfig')" data-i18n="cancel">Cancelar</button><button class="btn" id="saveFinConfigBtn" onclick="saveFinConfig()" data-i18n="save">Salvar</button></div></div></div>
+
+  <div class="overlay" id="ovInsumos"><div class="modal" style="max-width:520px">
+    <h3 id="insTitle">Catálogo de costo de insumos</h3>
+    <p id="insSub" class="muted" style="font-size:12px;margin-top:-8px;margin-bottom:12px;line-height:1.5">Registra el costo de compra y el rendimiento de cada producto — el costo por unidad se calcula solo. Se usa para sugerir el costo real al cerrar una cotización o registrar un procedimiento.</p>
+    <div id="insList" style="margin-bottom:14px"></div>
+    <div style="border-top:1px solid var(--border);padding-top:12px">
+      <div class="field"><label id="insNameLbl">Nombre del producto</label><input id="insName" placeholder="ej. Dysport"></div>
+      <div style="display:flex;gap:8px">
+        <div class="field" style="flex:1"><label id="insTotalLbl">Costo del frasco/caja (MXN)</label><input id="insTotal" type="number"></div>
+        <div class="field" style="flex:1"><label id="insYieldLbl">Rendimiento (cantidad)</label><input id="insYield" type="number" step="0.01"></div>
+        <div class="field" style="flex:1"><label id="insUnitLbl">Unidad</label><select id="insUnit">
+          <option value="U">U</option><option value="ml">ml</option><option value="jeringa">jeringa</option><option value="vial">vial</option>
+        </select></div>
+      </div>
+      <button class="btn sm" id="saveInsumoBtn" onclick="saveInsumo()" style="margin-top:4px">+ <span id="insAddLbl">Agregar</span></button>
+    </div>
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovInsumos')" data-i18n="cancel">Cancelar</button></div></div></div>
 
   <!-- MODAL FECHAR COTIZAÇÃO → PROCEDIMENTOS -->
   <div class="overlay" id="ovCloseQuote"><div class="modal" id="closeQuoteBody" style="max-width:480px"></div></div>
@@ -465,19 +536,21 @@ const CATALOG=[
 ];
 const ALL_ITEMS={}; CATALOG.forEach(c=>c.items.forEach(i=>{ALL_ITEMS[i.id]={...i,cat:c.cat,prod:c.prod};if(i.extra)ALL_ITEMS[i.extra.id]={...i.extra,cat:c.cat,prod:c.prod,unit:''};}));
 
-let patients=[],quotes=[],anamneses=[],photos=[],CLINIC_ID=null,currentPatient=null,lang='es',signupMode=false,cart=[],discPct=null;
+let patients=[],quotes=[],anamneses=[],photos=[],expenses=[],productCosts=[],CLINIC_ID=null,currentPatient=null,lang='es',signupMode=false,cart=[],discPct=null;
+/* Defaults calculados a partir de Getnet Visa/Master (contado 0.70%+16%IVA, 3msi 0.70+3.50+16%, 6msi 0.70+5.50+16%) */
+let finSettings={hourly_cost_cents:0,avg_duration_min:45,fee_efectivo:0,fee_transferencia:0,fee_debito:0.81,fee_credito:0.81,fee_credito_3msi:4.87,fee_credito_6msi:7.19};
 const money=v=>'$'+(Math.round(v)||0).toLocaleString('es-MX');
 const initials=n=>(n||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
 const fmtDate=d=>{if(!d)return '—';const p=String(d).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0].slice(2)}`:d;};
 
 /* ============ i18n ============ */
-const T={pt:{nav_dash:'Dashboard',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',role:'Administradora',logout:'Sair',search:'Buscar paciente...',hi:'Bem-vinda',k_act:'Pacientes',k_proc:'Procedimentos',k_rev:'Receita',k_quotes:'Cotizações',patients:'Pacientes',new_pat:'Novo paciente',no_pat:'Nenhum paciente ainda. Clique em "Novo paciente" para começar.',back:'Voltar',new_proc:'Registrar procedimento',f_name:'Nome',f_birth:'Nascimento',f_phone:'Telefone',f_email:'Email',f_instagram:'Instagram',need_pat_min:'Adicione nome, telefone e ao menos e-mail ou Instagram.',f_skin:'Tipo de pele',f_proc:'Procedimento',f_product:'Produto / marca',f_lot:'Lote',f_qty:'Quantidade aplicada',f_area:'Zona aplicada',f_value:'Valor (MXN)',cancel:'Cancelar',save:'Salvar',soon_t:'Em construção',soon_d:'A Agenda entra na próxima fatia.',skin:'Tipo de pele',allergy:'Alergias',tl:'Histórico de tratamentos',add_proc:'+ Procedimento',procs_n:'procedimentos',quoter:'Cotizador',quote:'Cotização',clear:'Limpar',f_patient:'Paciente',cart_empty:'Toque em + nos tratamentos para montar a proposta.',f_disc:'Desconto (MXN)',f_reason:'Motivo do desconto',f_pay:'Forma de pagamento',subtotal:'Subtotal',discount:'Desconto',save_quote:'Guardar cotização',quotes_t:'Cotizações',no_quotes:'Nenhuma cotização ainda.',saved:'Cotização salva! ✅',pat_saved:'Paciente salvo ✅',proc_saved:'Procedimento registrado ✅',no_patient:'Sem paciente',login_sub:'Entre para acessar a sua clínica',lbl_email:'E-mail',lbl_pass:'Senha',enter:'Entrar',create:'Criar conta',first:'Primeira vez?',have:'Já tem conta?',need_items:'Adicione ao menos um tratamento.',need_reason:'Descreva o motivo do desconto.',anam_do:'Realizar anamnese',anam_view:'Ver / editar',anam_done:'Assinada em',anam_img:'Uso de imagem autorizado',anam_none:'Anamnese pendente — realize na primeira consulta.',new_appt:'Nova consulta',f_date:'Data',f_time:'Hora',f_dur:'Duração (min)',f_treat:'Tratamento',f_notes:'Notas',k_today:'Consultas hoje',v_day:'Dia',v_week:'Semana'},
-       es:{nav_dash:'Panel',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',role:'Administradora',logout:'Salir',search:'Buscar paciente...',hi:'Bienvenida',k_act:'Pacientes',k_proc:'Procedimientos',k_rev:'Ingresos',k_quotes:'Cotizaciones',patients:'Pacientes',new_pat:'Nuevo paciente',no_pat:'Aún no hay pacientes. Haz clic en "Nuevo paciente" para empezar.',back:'Volver',new_proc:'Registrar procedimiento',f_name:'Nombre',f_birth:'Nacimiento',f_phone:'Teléfono',f_email:'Correo',f_instagram:'Instagram',need_pat_min:'Agrega nombre, teléfono y al menos correo o Instagram.',f_skin:'Tipo de piel',f_proc:'Procedimiento',f_product:'Producto / marca',f_lot:'Lote',f_qty:'Cantidad aplicada',f_area:'Zona aplicada',f_value:'Valor (MXN)',cancel:'Cancelar',save:'Guardar',soon_t:'En construcción',soon_d:'La Agenda llega en la próxima fase.',skin:'Tipo de piel',allergy:'Alergias',tl:'Historial de tratamientos',add_proc:'+ Procedimiento',procs_n:'procedimientos',quoter:'Cotizador',quote:'Cotización',clear:'Limpiar',f_patient:'Paciente',cart_empty:'Toca + en los tratamientos para armar la propuesta.',f_disc:'Descuento (MXN)',f_reason:'Motivo del descuento',f_pay:'Forma de pago',subtotal:'Subtotal',discount:'Descuento',save_quote:'Guardar cotización',quotes_t:'Cotizaciones',no_quotes:'Aún no hay cotizaciones.',saved:'¡Cotización guardada! ✅',pat_saved:'Paciente guardado ✅',proc_saved:'Procedimiento registrado ✅',no_patient:'Sin paciente',login_sub:'Entra para acceder a tu clínica',lbl_email:'Correo',lbl_pass:'Contraseña',enter:'Entrar',create:'Crear cuenta',first:'¿Primera vez?',have:'¿Ya tienes cuenta?',need_items:'Agrega al menos un tratamiento.',need_reason:'Describe el motivo del descuento.',anam_do:'Realizar anamnesis',anam_view:'Ver / editar',anam_done:'Firmada el',anam_img:'Uso de imagen autorizado',anam_none:'Anamnesis pendiente — realízala en la primera consulta.',new_appt:'Nueva cita',f_date:'Fecha',f_time:'Hora',f_dur:'Duración (min)',f_treat:'Tratamiento',f_notes:'Notas',k_today:'Citas hoy',v_day:'Día',v_week:'Semana'}};
+const T={pt:{nav_dash:'Dashboard',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',nav_fin:'Financeiro',role:'Administradora',logout:'Sair',search:'Buscar paciente...',hi:'Bem-vinda',k_act:'Pacientes',k_proc:'Procedimentos',k_rev:'Receita',k_quotes:'Cotizações',patients:'Pacientes',new_pat:'Novo paciente',no_pat:'Nenhum paciente ainda. Clique em "Novo paciente" para começar.',back:'Voltar',new_proc:'Registrar procedimento',f_name:'Nome',f_birth:'Nascimento',f_phone:'Telefone',f_email:'Email',f_instagram:'Instagram',need_pat_min:'Adicione nome, telefone e ao menos e-mail ou Instagram.',f_skin:'Tipo de pele',f_proc:'Procedimento',f_product:'Produto / marca',f_lot:'Lote',f_qty:'Quantidade aplicada',f_area:'Zona aplicada',f_value:'Valor (MXN)',f_cost:'Custo do produto (MXN)',new_expense:'Nova despesa',cancel:'Cancelar',save:'Salvar',soon_t:'Em construção',soon_d:'A Agenda entra na próxima fatia.',skin:'Tipo de pele',allergy:'Alergias',tl:'Histórico de tratamentos',add_proc:'+ Procedimento',procs_n:'procedimentos',quoter:'Cotizador',quote:'Cotização',clear:'Limpar',f_patient:'Paciente',cart_empty:'Toque em + nos tratamentos para montar a proposta.',f_disc:'Desconto (MXN)',f_reason:'Motivo do desconto',f_pay:'Forma de pagamento',subtotal:'Subtotal',discount:'Desconto',save_quote:'Guardar cotização',quotes_t:'Cotizações',no_quotes:'Nenhuma cotização ainda.',saved:'Cotização salva! ✅',pat_saved:'Paciente salvo ✅',proc_saved:'Procedimento registrado ✅',no_patient:'Sem paciente',login_sub:'Entre para acessar a sua clínica',lbl_email:'E-mail',lbl_pass:'Senha',enter:'Entrar',create:'Criar conta',first:'Primeira vez?',have:'Já tem conta?',need_items:'Adicione ao menos um tratamento.',need_reason:'Descreva o motivo do desconto.',anam_do:'Realizar anamnese',anam_view:'Ver / editar',anam_done:'Assinada em',anam_img:'Uso de imagem autorizado',anam_none:'Anamnese pendente — realize na primeira consulta.',new_appt:'Nova consulta',f_date:'Data',f_time:'Hora',f_dur:'Duração (min)',f_treat:'Tratamento',f_notes:'Notas',k_today:'Consultas hoje',v_day:'Dia',v_week:'Semana'},
+       es:{nav_dash:'Panel',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',nav_fin:'Finanzas',role:'Administradora',logout:'Salir',search:'Buscar paciente...',hi:'Bienvenida',k_act:'Pacientes',k_proc:'Procedimientos',k_rev:'Ingresos',k_quotes:'Cotizaciones',patients:'Pacientes',new_pat:'Nuevo paciente',no_pat:'Aún no hay pacientes. Haz clic en "Nuevo paciente" para empezar.',back:'Volver',new_proc:'Registrar procedimiento',f_name:'Nombre',f_birth:'Nacimiento',f_phone:'Teléfono',f_email:'Correo',f_instagram:'Instagram',need_pat_min:'Agrega nombre, teléfono y al menos correo o Instagram.',f_skin:'Tipo de piel',f_proc:'Procedimiento',f_product:'Producto / marca',f_lot:'Lote',f_qty:'Cantidad aplicada',f_area:'Zona aplicada',f_value:'Valor (MXN)',f_cost:'Costo del producto (MXN)',new_expense:'Nuevo gasto',cancel:'Cancelar',save:'Guardar',soon_t:'En construcción',soon_d:'La Agenda llega en la próxima fase.',skin:'Tipo de piel',allergy:'Alergias',tl:'Historial de tratamientos',add_proc:'+ Procedimiento',procs_n:'procedimientos',quoter:'Cotizador',quote:'Cotización',clear:'Limpiar',f_patient:'Paciente',cart_empty:'Toca + en los tratamientos para armar la propuesta.',f_disc:'Descuento (MXN)',f_reason:'Motivo del descuento',f_pay:'Forma de pago',subtotal:'Subtotal',discount:'Descuento',save_quote:'Guardar cotización',quotes_t:'Cotizaciones',no_quotes:'Aún no hay cotizaciones.',saved:'¡Cotización guardada! ✅',pat_saved:'Paciente guardado ✅',proc_saved:'Procedimiento registrado ✅',no_patient:'Sin paciente',login_sub:'Entra para acceder a tu clínica',lbl_email:'Correo',lbl_pass:'Contraseña',enter:'Entrar',create:'Crear cuenta',first:'¿Primera vez?',have:'¿Ya tienes cuenta?',need_items:'Agrega al menos un tratamiento.',need_reason:'Describe el motivo del descuento.',anam_do:'Realizar anamnesis',anam_view:'Ver / editar',anam_done:'Firmada el',anam_img:'Uso de imagen autorizado',anam_none:'Anamnesis pendiente — realízala en la primera consulta.',new_appt:'Nueva cita',f_date:'Fecha',f_time:'Hora',f_dur:'Duración (min)',f_treat:'Tratamiento',f_notes:'Notas',k_today:'Citas hoy',v_day:'Día',v_week:'Semana'}};
 const tr=k=>T[lang][k]||k;
 function setLang(l){lang=l;document.getElementById('pt').classList.toggle('on',l==='pt');document.getElementById('es').classList.toggle('on',l==='es');
   document.querySelectorAll('[data-i18n]').forEach(e=>{const k=e.getAttribute('data-i18n');if(T[l][k])e.textContent=T[l][k];});
   document.querySelectorAll('[data-i18n-ph]').forEach(e=>{const k=e.getAttribute('data-i18n-ph');if(T[l][k])e.placeholder=T[l][k];});
-  refreshLoginTexts();renderPatients();renderCatalog();renderCart();renderPatientSelect();renderAgenda();if(currentPatient)renderDetail();document.documentElement.lang=l;}
+  refreshLoginTexts();renderPatients();renderCatalog();renderCart();renderPatientSelect();renderAgenda();renderFinance();if(currentPatient)renderDetail();document.documentElement.lang=l;}
 function refreshLoginTexts(){const s=document.getElementById('loginSub');if(!s)return;s.textContent=tr('login_sub');document.getElementById('lblEmail').textContent=tr('lbl_email');document.getElementById('lblPass').textContent=tr('lbl_pass');
   document.getElementById('authBtn').textContent=signupMode?tr('create'):tr('enter');
   document.getElementById('toggleAuth').innerHTML=(signupMode?tr('have'):tr('first'))+' <a onclick="toggleMode()">'+(signupMode?tr('enter'):tr('create'))+'</a>';}
@@ -511,22 +584,28 @@ async function onLogin(name){
 /* ============ DADOS (Supabase ou demo) ============ */
 async function loadAll(){
   if(DEMO){renderAll();return;}
-  const[p,q,an,ap,ph]=await Promise.all([
+  const[p,q,an,ap,ph,ex,fc,pc]=await Promise.all([
     db.from('patients').select('*, procedures(*)').order('created_at',{ascending:true}),
     db.from('quotes').select('*').order('created_at',{ascending:false}),
     db.from('anamneses').select('*').order('created_at',{ascending:false}),
     db.from('appointments').select('*').order('starts_at',{ascending:true}),
-    db.from('patient_photos').select('*').order('taken_at',{ascending:false})
+    db.from('patient_photos').select('*').order('taken_at',{ascending:false}),
+    db.from('expenses').select('*').order('expense_date',{ascending:false}),
+    db.from('finance_settings').select('*').limit(1).maybeSingle(),
+    db.from('product_costs').select('*').order('name',{ascending:true})
   ]);
   if(!p.error)patients=(p.data||[]).map(x=>({...x,procedures:(x.procedures||[]).sort((a,b)=>String(b.performed_at||'').localeCompare(String(a.performed_at||'')))}));
   quotes=q.error?[]:(q.data||[]);
   anamneses=an.error?[]:(an.data||[]);
   appts=ap.error?[]:(ap.data||[]);
   photos=ph.error?[]:(ph.data||[]);
+  expenses=ex.error?[]:(ex.data||[]);
+  if(!fc.error&&fc.data)finSettings={...finSettings,...fc.data};
+  productCosts=pc.error?[]:(pc.data||[]);
   await buildAvatars();
   renderAll();
 }
-function renderAll(){renderPatients();renderDash();renderCatalog();renderCart();renderPatientSelect();}
+function renderAll(){renderPatients();renderDash();renderCatalog();renderCart();renderPatientSelect();renderFinance();}
 async function savePatient(){
   const name=document.getElementById('npName').value.trim();
   const phoneDigits=document.getElementById('npPhone').value.trim();
@@ -542,10 +621,11 @@ async function savePatient(){
 }
 async function saveProc(){
   const v=parseInt(document.getElementById('prValue').value||'0',10);if(!v)return;
-  const rec={patient_id:currentPatient.id,name:document.getElementById('prName').value,product:[document.getElementById('prProduct').value,document.getElementById('prLot').value?('Lote '+document.getElementById('prLot').value):''].filter(Boolean).join(' · ')||null,applied_qty:document.getElementById('prQty').value||null,area:document.getElementById('prArea').value||null,value_cents:v*100,performed_at:new Date().toISOString().slice(0,10)};
+  const cst=parseInt(document.getElementById('prCost').value||'0',10);
+  const rec={patient_id:currentPatient.id,name:document.getElementById('prName').value,product:[document.getElementById('prProduct').value,document.getElementById('prLot').value?('Lote '+document.getElementById('prLot').value):''].filter(Boolean).join(' · ')||null,applied_qty:document.getElementById('prQty').value||null,area:document.getElementById('prArea').value||null,value_cents:v*100,cost_cents:cst?cst*100:null,payment_method:document.getElementById('prPayment').value||null,performed_at:new Date().toISOString().slice(0,10)};
   if(DEMO){currentPatient.procedures.unshift({...rec});}
   else{const btn=document.getElementById('saveProcBtn');btn.disabled=true;const{error}=await db.from('procedures').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();currentPatient=patients.find(p=>p.id===currentPatient.id);}
-  closeModal('ovProc');renderDetail();renderDash();toast(tr('proc_saved'));
+  closeModal('ovProc');renderDetail();renderDash();renderFinance();toast(tr('proc_saved'));
 }
 
 /* ============ COTIZADOR ============ */
@@ -602,7 +682,7 @@ function renderTotals(){
   document.getElementById('tTotal').textContent=money(t)+' MXN';
   document.getElementById('discReasonWrap').style.display=d>0?'block':'none';
   const pay=document.getElementById('qPay').value;
-  document.getElementById('tMsi').textContent=(pay==='credito-3msi'&&t>0)?('3 × '+money(t/3)+' sin intereses'):'';
+  document.getElementById('tMsi').textContent=t>0?(pay==='credito-3msi'?('3 × '+money(t/3)+' sin intereses'):pay==='credito-6msi'?('6 × '+money(t/6)+' sin intereses'):''):'';
 }
 function renderPatientSelect(){
   const sel=document.getElementById('qPatient');if(!sel)return;const cur=sel.value;
@@ -629,17 +709,36 @@ async function saveQuote(){
 let cqQuote=null,cqRows=[],cqScanIdx=null,cqScanning=false;
 function openCloseQuote(qid){
   cqQuote=quotes.find(q=>q.id===qid);if(!cqQuote)return;
-  cqRows=(cqQuote.items||[]).map(it=>({...it,product:'',lot:'',qtyApplied:'',area:'',finalPrice:it.price*it.qty}));
+  cqRows=(cqQuote.items||[]).map(it=>({...it,product:'',lot:'',qtyApplied:'',area:'',finalPrice:it.price*it.qty,cost:'',insumoId:'',insumoQty:''}));
   renderCloseQuoteModal();
   document.getElementById('ovCloseQuote').classList.add('show');
 }
 function closeCqModal(){document.getElementById('ovCloseQuote').classList.remove('show');cqQuote=null;cqRows=[];}
 function cqSync(){cqRows.forEach((r,i)=>{
   const pEl=document.getElementById('cqProduct_'+i),lEl=document.getElementById('cqLot_'+i),
-        qEl=document.getElementById('cqQty_'+i),aEl=document.getElementById('cqArea_'+i),fEl=document.getElementById('cqPrice_'+i);
+        qEl=document.getElementById('cqQty_'+i),aEl=document.getElementById('cqArea_'+i),fEl=document.getElementById('cqPrice_'+i),
+        cEl=document.getElementById('cqCost_'+i),iEl=document.getElementById('cqInsumo_'+i),iqEl=document.getElementById('cqInsumoQty_'+i);
   if(pEl)r.product=pEl.value;if(lEl)r.lot=lEl.value;if(qEl)r.qtyApplied=qEl.value;if(aEl)r.area=aEl.value;
   if(fEl)r.finalPrice=parseInt(fEl.value||'0',10)||0;
+  if(cEl)r.cost=cEl.value;
+  if(iEl)r.insumoId=iEl.value;if(iqEl)r.insumoQty=iqEl.value;
 });}
+function insumoOptionsHTML(){
+  return `<option value="">— ${L('insumo','insumo')} —</option>`+productCosts.map(pc=>`<option value="${pc.id}">${pc.name} (${money(cpu(pc))}/${pc.unit_label})</option>`).join('');
+}
+function cpu(pc){return pc&&pc.yield_qty>0?(pc.total_cost_cents||0)/100/pc.yield_qty:0;}
+function cqCalcCost(i){
+  cqSync();
+  const pc=productCosts.find(x=>x.id===document.getElementById('cqInsumo_'+i).value);
+  const qty=parseFloat(document.getElementById('cqInsumoQty_'+i).value||'0');
+  const sugEl=document.getElementById('cqInsumoSuggest_'+i);
+  if(pc&&qty>0){
+    const cost=cpu(pc)*qty;
+    document.getElementById('cqCost_'+i).value=Math.round(cost);
+    if(sugEl)sugEl.textContent=money(cost)+' ('+qty+' '+pc.unit_label+' × '+money(cpu(pc))+')';
+  }else if(sugEl)sugEl.textContent='—';
+  cqSync();
+}
 function renderCloseQuoteModal(){
   const el=document.getElementById('closeQuoteBody');if(!el||!cqQuote)return;
   el.innerHTML=`<h3>${L('Fechar cotización','Fechar cotização')}</h3>
@@ -655,11 +754,20 @@ function renderCloseQuoteModal(){
         <input id="cqQty_${i}" placeholder="${L('Cantidad aplicada (ej. 40U, 2.5ml)','Quantidade aplicada (ex. 40U, 2.5ml)')}" value="${(r.qtyApplied||'').replace(/"/g,'&quot;')}" style="flex:1">
         <input id="cqArea_${i}" placeholder="${L('Zona aplicada','Zona aplicada')}" value="${(r.area||'').replace(/"/g,'&quot;')}" style="flex:1">
       </div>
-      <div style="display:flex;align-items:center;gap:6px">
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap;margin-bottom:6px">
+        <small style="color:var(--muted)">${L('Insumo usado','Insumo usado')}</small>
+        <select id="cqInsumo_${i}" onchange="cqCalcCost(${i})" style="background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 6px">${insumoOptionsHTML()}</select>
+        <input id="cqInsumoQty_${i}" type="number" step="0.01" value="${r.insumoQty||''}" placeholder="${L('cant.','qtd.')}" style="width:60px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 6px" oninput="cqCalcCost(${i})">
+        <small class="muted" id="cqInsumoSuggest_${i}">—</small>
+      </div>
+      <div style="display:flex;align-items:center;gap:6px;flex-wrap:wrap">
         <small style="color:var(--muted)">${L('Valor cobrado','Valor cobrado')}</small>
         <input id="cqPrice_${i}" type="number" value="${r.finalPrice}" style="width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 6px" onchange="cqSync()"> MXN
+        <small style="color:var(--muted);margin-left:10px">${L('Costo del producto','Custo do produto')}</small>
+        <input id="cqCost_${i}" type="number" value="${r.cost||''}" placeholder="${L('opcional','opcional')}" style="width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 6px" onchange="cqSync()"> MXN
       </div></div>`).join('')}
     <div class="modal-actions"><button class="btn ghost" onclick="closeCqModal()">${L('Cancelar','Cancelar')}</button><button class="btn" id="cqConfirmBtn" onclick="confirmCloseQuote()">${L('Fechar y registrar','Fechar e registrar')}</button></div>`;
+  cqRows.forEach((r,i)=>{const sel=document.getElementById('cqInsumo_'+i);if(sel&&r.insumoId)sel.value=r.insumoId;if(r.insumoId&&r.insumoQty)cqCalcCost(i);});
 }
 function cqScanClick(i){cqSync();cqScanIdx=i;document.getElementById('cqScanInput').click();}
 async function cqScanFile(file){
@@ -692,7 +800,7 @@ async function confirmCloseQuote(){
   const recs=cqRows.map(r=>({patient_id:cqQuote.patient_id,name:r.name,
     product:[r.product,r.lot?('Lote '+r.lot):''].filter(Boolean).join(' · ')||null,
     applied_qty:r.qtyApplied||null,area:r.area||null,
-    value_cents:(r.finalPrice||0)*100,performed_at:today}));
+    value_cents:(r.finalPrice||0)*100,cost_cents:r.cost?parseInt(r.cost,10)*100:null,payment_method:cqQuote.payment_method||null,performed_at:today}));
   const btn=document.getElementById('cqConfirmBtn');if(btn)btn.disabled=true;
   if(DEMO){
     const pat=patients.find(p=>p.id===cqQuote.patient_id);
@@ -706,7 +814,7 @@ async function confirmCloseQuote(){
     await loadAll();
     currentPatient=patients.find(p=>p.id===currentPatient.id)||currentPatient;
   }
-  closeCqModal();renderDetail();renderDash();toast(L('¡Cotización cerrada y procedimientos registrados! ✅','Cotização fechada e procedimentos registrados! ✅'));
+  closeCqModal();renderDetail();renderDash();renderFinance();toast(L('¡Cotización cerrada y procedimientos registrados! ✅','Cotização fechada e procedimentos registrados! ✅'));
 }
 
 /* ============ ANAMNESE (Prontuário) ============ */
@@ -985,6 +1093,177 @@ function renderDash(){
     <div>${bdays.map(p=>`<span class="bday" onclick="dashWa('${p.id}')">🎂 ${p.full_name} · ${String(p.birth_date).slice(8,10)}/${String(p.birth_date).slice(5,7)}${p.phone?' · 💬':''}</span>`).join('')}</div>
   </div>`:''}`;
 }
+/* ============ FINANCEIRO (margem + relatórios) ============ */
+const FEE_LABEL={efectivo:'Efectivo',debito:'Débito',transferencia:'Transferencia',credito:'Crédito (1x)','credito-3msi':'Crédito · 3 MSI','credito-6msi':'Crédito · 6 MSI'};
+function feePctFor(pm){
+  const map={efectivo:finSettings.fee_efectivo,transferencia:finSettings.fee_transferencia,debito:finSettings.fee_debito,credito:finSettings.fee_credito,'credito-3msi':finSettings.fee_credito_3msi,'credito-6msi':finSettings.fee_credito_6msi};
+  return pm&&map[pm]!=null?map[pm]:null;
+}
+function expensesForMonth(mm){
+  const oneOff=expenses.filter(x=>!x.is_recurring&&String(x.expense_date||'').slice(0,7)===mm);
+  const recurring=expenses.filter(x=>x.is_recurring&&String(x.expense_date||'').slice(0,7)<=mm);
+  const items=[...oneOff,...recurring].sort((a,b)=>String(b.expense_date||'').localeCompare(String(a.expense_date||'')));
+  const total=items.reduce((a,x)=>a+(x.amount_cents||0)/100,0);
+  return{items,total};
+}
+function renderFinance(){
+  const el=document.getElementById('finBody');if(!el)return;
+  const today=localISO(new Date()),mm=today.slice(0,7);
+  const prevD=new Date(today+'T12:00');prevD.setMonth(prevD.getMonth()-1);
+  const pmm=localISO(prevD).slice(0,7);
+
+  let rev=0,revP=0,cost=0,costP=0,cnt=0,cntP=0,costedCnt=0,feeTotal=0,feeTotalP=0,feeCoveredCnt=0;
+  const byTreat={};
+  const laborPerProc=finSettings.avg_duration_min*((finSettings.hourly_cost_cents||0)/100)/60;
+  patients.forEach(p=>(p.procedures||[]).forEach(pr=>{
+    const d=String(pr.performed_at||'').slice(0,7);
+    const v=(pr.value_cents||0)/100,c=(pr.cost_cents||0)/100;
+    const pct=feePctFor(pr.payment_method),fee=pct!=null?v*pct/100:0;
+    if(d===mm){rev+=v;cost+=c;cnt++;feeTotal+=fee;if(pr.cost_cents!=null)costedCnt++;if(pct!=null)feeCoveredCnt++;
+      const k=pr.name||'—';if(!byTreat[k])byTreat[k]={rev:0,cost:0,n:0};byTreat[k].rev+=v;byTreat[k].cost+=c;byTreat[k].n++;
+    }
+    if(d===pmm){revP+=v;costP+=c;cntP++;feeTotalP+=fee;}
+  }));
+  const{items:expList,total:expM}=expensesForMonth(mm);
+  const{total:expPM}=expensesForMonth(pmm);
+  const laborTotal=laborPerProc*cnt,laborTotalP=laborPerProc*cntP;
+
+  const margin=rev-cost,marginP=revP-costP;
+  const totalCosts=cost+laborTotal+feeTotal+expM,totalCostsP=costP+laborTotalP+feeTotalP+expPM;
+  const net=rev-totalCosts,netP=revP-totalCostsP;
+  const marginPct=rev>0?Math.round(margin/rev*100):0,netPct=rev>0?Math.round(net/rev*100):0;
+  const delta=(cur,prev)=>prev>0?Math.round((cur-prev)/prev*100):(cur>0?100:0);
+  const trend=d=>d>0?`<span style="color:#2e9e5a">▲ ${d}%</span>`:d<0?`<span style="color:#c97b8e">▼ ${Math.abs(d)}%</span>`:`<span style="color:var(--muted)">— 0%</span>`;
+
+  const topTreat=Object.entries(byTreat).map(([k,v])=>({name:k,...v})).sort((a,b)=>b.rev-a.rev).slice(0,6);
+  const monthNames=lang==='pt'?['jan','fev','mar','abr','mai','jun','jul','ago','set','out','nov','dez']:['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  const monthLbl=s=>{const[y,m]=s.split('-');return monthNames[parseInt(m,10)-1]+'/'+y.slice(2);};
+
+  el.innerHTML=`
+  <div class="grid kpis">
+    <div class="card kpi"><div class="k-top"><div class="k-ic">💰</div><span>${L('Ingresos','Receita')} · ${monthLbl(mm)}</span></div><div class="k-val">${money(rev)}</div><div style="font-size:11px;margin-top:2px">${trend(delta(rev,revP))} <span style="color:var(--muted)">${L('vs mes anterior','vs mês anterior')}</span></div></div>
+    <div class="card kpi"><div class="k-top"><div class="k-ic">📦</div><span>${L('Costo de productos','Custo de produtos')}</span></div><div class="k-val">${money(cost)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${costedCnt}/${cnt} ${L('procedimientos con costo','procedimentos com custo')}</div></div>
+    <div class="card kpi"><div class="k-top"><div class="k-ic">✦</div><span>${L('Margen bruto','Margem bruta')}</span></div><div class="k-val">${money(margin)}</div><div style="font-size:11px;margin-top:2px">${marginPct}% <span style="color:var(--muted)">${trend(delta(margin,marginP))}</span></div></div>
+    <div class="card kpi"><div class="k-top"><div class="k-ic">▦</div><span>${L('Utilidad neta real','Lucro líquido real')}</span></div><div class="k-val">${money(net)}</div><div style="font-size:11px;margin-top:2px">${netPct}% <span style="color:var(--muted)">${trend(delta(net,netP))}</span></div></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="section-t" style="margin:0 0 8px"><span>🧮 ${L('¿A dónde va el dinero?','Pra onde vai o dinheiro?')} · ${monthLbl(mm)}</span></div>
+    <div class="tot-row"><span>${L('Ingresos','Receita')}</span><span>${money(rev)}</span></div>
+    <div class="tot-row"><span style="color:var(--muted)">− ${L('Costo de productos','Custo de produtos')}</span><span style="color:var(--muted)">${money(cost)}</span></div>
+    <div class="tot-row"><span style="color:var(--muted)">− ${L('Mano de obra estimada','Mão de obra estimada')}</span><span style="color:var(--muted)">${money(laborTotal)}</span></div>
+    <div class="tot-row"><span style="color:var(--muted)">− ${L('Comisión de terminal estimada','Taxa de cartão estimada')}</span><span style="color:var(--muted)">${money(feeTotal)}</span></div>
+    <div class="tot-row"><span style="color:var(--muted)">− ${L('Gastos fijos del mes','Despesas fixas do mês')}</span><span style="color:var(--muted)">${money(expM)}</span></div>
+    <div class="tot-row grand"><span>${L('Utilidad neta real','Lucro líquido real')}</span><span class="v">${money(net)}</span></div>
+    <div class="muted" style="font-size:11px;margin-top:10px;line-height:1.5">${L('Mano de obra: ','Mão de obra: ')}${finSettings.avg_duration_min}min × ${money((finSettings.hourly_cost_cents||0)/100)}/h ${L('(configurable en ⚙ Configuración).','(configurável em ⚙ Configuração).')} ${L('Comisión calculada en ','Taxa calculada em ')}${feeCoveredCnt}/${cnt} ${L('procedimientos (los demás no tienen forma de pago registrada).','procedimentos (os demais não têm forma de pagamento registrada).')}</div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="section-t" style="margin:0 0 6px"><span>📊 ${L('Tratamientos del mes','Tratamentos do mês')} · ${monthLbl(mm)}</span></div>
+    ${topTreat.length?topTreat.map(t=>`<div class="today-row" style="cursor:default"><div><div class="tn">${t.name}</div><div class="tt">${t.n} ${L('realizados','realizados')}${t.cost?' · '+L('margen ','margem ')+money(t.rev-t.cost):''}</div></div><div class="chip"><b>${money(t.rev)}</b></div></div>`).join(''):`<div class="empty">${L('Sin procedimientos este mes.','Sem procedimentos este mês.')}</div>`}
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="section-t" style="margin:0 0 6px"><span>🧾 ${L('Gastos del mes','Despesas do mês')} · ${money(expM)}</span></div>
+    ${expList.length?expList.map(x=>`<div class="today-row" style="cursor:default"><div><div class="tn">${x.description||'—'}${x.is_recurring?' · 🔁':''}</div><div class="tt">${fmtDate(x.expense_date)} · ${x.category||'otros'}${x.is_recurring?' · '+L('recurrente','recorrente'):''}</div></div><div class="chip"><b>${money((x.amount_cents||0)/100)}</b></div><span class="rm" style="margin-left:8px;cursor:pointer" onclick="deleteExpense('${x.id}')">✕</span></div>`).join(''):`<div class="empty">${L('Sin gastos registrados este mes.','Sem despesas registradas este mês.')}</div>`}
+  </div>`;
+}
+function openExpenseModal(){
+  document.getElementById('exDescLbl').textContent=L('Descripción','Descrição');
+  document.getElementById('exCatLbl').textContent=L('Categoría','Categoria');
+  document.getElementById('exAmountLbl').textContent=L('Monto (MXN)','Valor (MXN)');
+  document.getElementById('exDateLbl').textContent=L('Fecha','Data');
+  document.getElementById('exCategory').innerHTML=`<option value="insumos">${L('Insumos / productos','Insumos / produtos')}</option><option value="renta">${L('Renta','Aluguel')}</option><option value="salarios">${L('Salarios','Salários')}</option><option value="marketing">Marketing</option><option value="otros">${L('Otros','Outros')}</option>`;
+  document.getElementById('exRecurringLbl').textContent=L('Se repite todos los meses (ej. renta, marketing fijo) — no hace falta volver a registrarla','Se repete todo mês (ex. aluguel, marketing fixo) — não precisa lançar de novo');
+  exDesc.value='';exAmount.value='';exDate.value=localISO(new Date());exRecurring.checked=false;
+  document.getElementById('ovExpense').classList.add('show');
+}
+async function saveExpense(){
+  const desc=document.getElementById('exDesc').value.trim();
+  const amt=parseInt(document.getElementById('exAmount').value||'0',10);
+  if(!desc||!amt){toast(L('Agrega descripción y monto.','Adicione descrição e valor.'));return;}
+  const rec={description:desc,category:document.getElementById('exCategory').value,amount_cents:amt*100,expense_date:document.getElementById('exDate').value||localISO(new Date()),is_recurring:!!document.getElementById('exRecurring').checked};
+  if(DEMO){expenses.unshift({id:'ex'+Date.now(),...rec});}
+  else{const btn=document.getElementById('saveExpenseBtn');btn.disabled=true;const{error}=await db.from('expenses').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
+  closeModal('ovExpense');renderFinance();toast(L('¡Gasto guardado! ✅','Despesa salva! ✅'));
+}
+function openFinConfig(){
+  document.getElementById('fcTitle').textContent=L('Configuración financiera','Configuração financeira');
+  document.getElementById('fcSub').textContent=L('Se usa para calcular el costo real y la utilidad neta en Finanzas. Puedes ajustar cuando quieras — no afecta el flujo de cotizar.','Usado para calcular o custo real e o lucro líquido em Financeiro. Você pode ajustar quando quiser — não muda o fluxo de cotizar.');
+  document.getElementById('fcHourLbl').textContent=L('Costo por hora de consultorio (solo mano de obra — sin renta)','Custo por hora de consultório (só mão de obra — sem aluguel)');
+  document.getElementById('fcDurLbl').textContent=L('Duración promedio por atención (min)','Duração média por atendimento (min)');
+  document.getElementById('fcFeesLbl').textContent=L('Comisión de la terminal por forma de pago (%, ya con IVA incluido)','Comissão da maquininha por forma de pagamento (%, já com IVA incluído)');
+  document.getElementById('fcL_efectivo').textContent=L('Efectivo','Efetivo');
+  document.getElementById('fcL_transferencia').textContent=L('Transferencia','Transferência');
+  document.getElementById('fcL_debito').textContent=L('Débito','Débito');
+  document.getElementById('fcL_credito').textContent=L('Crédito (1x)','Crédito (1x)');
+  document.getElementById('fcL_credito3').textContent=L('Crédito · 3 MSI','Crédito · 3 MSI');
+  document.getElementById('fcL_credito6').textContent=L('Crédito · 6 MSI','Crédito · 6 MSI');
+  document.getElementById('fcNote').textContent=L('Valores iniciales calculados con las tasas de Getnet (Visa/Master) que nos pasaste. Si usas Clip o Amex con frecuencia, la comisión real es más alta (Clip contado ≈3,36%, Clip 3 MSI ≈8,67%, Clip 6 MSI ≈12,15%, Amex ≈4,18%) — ajusta el % promedio aquí si es tu caso.','Valores iniciais calculados com as taxas da Getnet (Visa/Master) que você passou. Se usar Clip ou Amex com frequência, a comissão real é maior (Clip à vista ≈3,36%, Clip 3 MSI ≈8,67%, Clip 6 MSI ≈12,15%, Amex ≈4,18%) — ajuste o % médio aqui se for o seu caso.');
+  document.getElementById('fcBtnLbl').textContent=L('Configuración','Configuração');
+  fcHourly.value=(finSettings.hourly_cost_cents||0)/100;
+  fcDuration.value=finSettings.avg_duration_min||45;
+  fcFee_efectivo.value=finSettings.fee_efectivo;fcFee_transferencia.value=finSettings.fee_transferencia;
+  fcFee_debito.value=finSettings.fee_debito;fcFee_credito.value=finSettings.fee_credito;
+  fcFee_credito3msi.value=finSettings.fee_credito_3msi;fcFee_credito6msi.value=finSettings.fee_credito_6msi;
+  document.getElementById('ovFinConfig').classList.add('show');
+}
+async function saveFinConfig(){
+  const rec={
+    hourly_cost_cents:Math.round(parseFloat(document.getElementById('fcHourly').value||'0')*100),
+    avg_duration_min:parseInt(document.getElementById('fcDuration').value||'45',10),
+    fee_efectivo:parseFloat(document.getElementById('fcFee_efectivo').value||'0'),
+    fee_transferencia:parseFloat(document.getElementById('fcFee_transferencia').value||'0'),
+    fee_debito:parseFloat(document.getElementById('fcFee_debito').value||'0'),
+    fee_credito:parseFloat(document.getElementById('fcFee_credito').value||'0'),
+    fee_credito_3msi:parseFloat(document.getElementById('fcFee_credito3msi').value||'0'),
+    fee_credito_6msi:parseFloat(document.getElementById('fcFee_credito6msi').value||'0')
+  };
+  finSettings={...finSettings,...rec};
+  if(DEMO){closeModal('ovFinConfig');renderFinance();toast(L('¡Guardado! ✅','Salvo! ✅'));return;}
+  const btn=document.getElementById('saveFinConfigBtn');btn.disabled=true;
+  const{error}=await db.from('finance_settings').upsert(rec,{onConflict:'clinic_id'});
+  btn.disabled=false;
+  if(error){alert(error.message);return;}
+  closeModal('ovFinConfig');renderFinance();toast(L('¡Guardado! ✅','Salvo! ✅'));
+}
+function openInsumosModal(){
+  document.getElementById('insTitle').textContent=L('Catálogo de costo de insumos','Catálogo de custo de insumos');
+  document.getElementById('insSub').textContent=L('Registra el costo de compra y el rendimiento de cada producto — el costo por unidad se calcula solo. Se usa para sugerir el costo real al cerrar una cotización o registrar un procedimiento.','Registre o custo de compra e o rendimento de cada produto — o custo por unidade é calculado sozinho. Usado para sugerir o custo real ao fechar uma cotização ou registrar um procedimento.');
+  document.getElementById('insNameLbl').textContent=L('Nombre del producto','Nome do produto');
+  document.getElementById('insTotalLbl').textContent=L('Costo del frasco/caja (MXN)','Custo do frasco/caixa (MXN)');
+  document.getElementById('insYieldLbl').textContent=L('Rendimiento (cantidad)','Rendimento (quantidade)');
+  document.getElementById('insUnitLbl').textContent=L('Unidad','Unidade');
+  document.getElementById('insAddLbl').textContent=L('Agregar','Adicionar');
+  document.getElementById('insBtnLbl').textContent=L('Insumos','Insumos');
+  insName.value='';insTotal.value='';insYield.value='';insUnit.value='U';
+  renderInsumosList();
+  document.getElementById('ovInsumos').classList.add('show');
+}
+function renderInsumosList(){
+  const el=document.getElementById('insList');if(!el)return;
+  el.innerHTML=productCosts.length?productCosts.map(pc=>`<div class="today-row" style="cursor:default"><div><div class="tn">${pc.name}</div><div class="tt">${money(pc.total_cost_cents/100)} ${L('cada','a cada')} ${pc.yield_qty} ${pc.unit_label} → ${money(cpu(pc))}/${pc.unit_label}</div></div><span class="rm" style="cursor:pointer" onclick="deleteInsumo('${pc.id}')">✕</span></div>`).join(''):`<div class="empty">${L('Sin insumos registrados todavía.','Sem insumos cadastrados ainda.')}</div>`;
+}
+async function saveInsumo(){
+  const name=document.getElementById('insName').value.trim();
+  const total=parseInt(document.getElementById('insTotal').value||'0',10);
+  const yld=parseFloat(document.getElementById('insYield').value||'0');
+  if(!name||!total||!yld){toast(L('Agrega nombre, costo y rendimiento.','Adicione nome, custo e rendimento.'));return;}
+  const rec={name,total_cost_cents:total*100,yield_qty:yld,unit_label:document.getElementById('insUnit').value};
+  if(DEMO){productCosts.push({id:'ins'+Date.now(),...rec});}
+  else{const btn=document.getElementById('saveInsumoBtn');btn.disabled=true;const{error}=await db.from('product_costs').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
+  insName.value='';insTotal.value='';insYield.value='';
+  renderInsumosList();toast(L('¡Insumo guardado! ✅','Insumo salvo! ✅'));
+}
+async function deleteInsumo(id){
+  if(DEMO){productCosts=productCosts.filter(x=>x.id!==id);renderInsumosList();return;}
+  const{error}=await db.from('product_costs').delete().eq('id',id);
+  if(error){alert(error.message);return;}
+  await loadAll();renderInsumosList();
+}
+async function deleteExpense(id){
+  if(DEMO){expenses=expenses.filter(x=>x.id!==id);renderFinance();return;}
+  const{error}=await db.from('expenses').delete().eq('id',id);
+  if(error){alert(error.message);return;}
+  await loadAll();
+}
 function renderPatients(){
   const el=document.getElementById('plist');if(!el)return;
   const q=(document.getElementById('q').value||'').toLowerCase();
@@ -1020,7 +1299,7 @@ function renderDetail_legacy(){
 function startQuoteFor(pid){show('cot');const sel=document.getElementById('qPatient');sel.value=pid;}
 function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('show'));document.getElementById(v).classList.add('show');
   document.querySelectorAll('.nav a,.mobilenav a').forEach(a=>a.classList.toggle('active',a.dataset.view===v));
-  if(v==='dash')renderDash();if(v==='age')renderAgenda();document.querySelector('.content').scrollTop=0;}
+  if(v==='dash')renderDash();if(v==='age')renderAgenda();if(v==='fin')renderFinance();document.querySelector('.content').scrollTop=0;}
 function openPatientModal(){
   npName.value='';npBirth.value='';npPhone.value='';npEmail.value='';npInstagram.value='';
   const ccSel=document.getElementById('npCC');
@@ -1031,7 +1310,22 @@ function openPatientModal(){
 function openProcModal(){
   const sel=document.getElementById('prName');
   sel.innerHTML=Object.values(ALL_ITEMS).map(i=>`<option>${i.name}</option>`).join('');
-  prProduct.value='';prLot.value='';prQty.value='';prArea.value='';prValue.value='';document.getElementById('ovProc').classList.add('show');}
+  prProduct.value='';prLot.value='';prQty.value='';prArea.value='';prValue.value='';prCost.value='';prPayment.value='';
+  document.getElementById('prPayLbl').textContent=L('Forma de pago','Forma de pagamento');
+  document.getElementById('prInsumoLbl').textContent=L('Calcular costo por insumo (opcional)','Calcular custo por insumo (opcional)');
+  document.getElementById('prInsumo').innerHTML=insumoOptionsHTML();
+  prInsumoQty.value='';document.getElementById('prInsumoSuggest').textContent='—';
+  document.getElementById('ovProc').classList.add('show');}
+function prCalcCost(){
+  const pc=productCosts.find(x=>x.id===document.getElementById('prInsumo').value);
+  const qty=parseFloat(document.getElementById('prInsumoQty').value||'0');
+  const sugEl=document.getElementById('prInsumoSuggest');
+  if(pc&&qty>0){
+    const cost=cpu(pc)*qty;
+    document.getElementById('prCost').value=Math.round(cost);
+    sugEl.textContent=money(cost)+' ('+qty+' '+pc.unit_label+' × '+money(cpu(pc))+')';
+  }else sugEl.textContent='—';
+}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 document.querySelectorAll('[data-view]').forEach(a=>a.addEventListener('click',()=>show(a.dataset.view)));
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
@@ -1542,7 +1836,9 @@ function icsDownload(){
   setLang('es');
   if(DEMO){
     patients=[{id:'d1',full_name:'Juliana Silva',vip:true,birth_date:'1993-05-21',phone:'55 1234 5678',skin_type:'Mixta',allergies:'Ninguna',
-      procedures:[{name:'Toxina Full Face',product:'Dysport · Lote DY123',value_cents:590000,performed_at:'2026-03-15'},{name:'Rejuran rostro',product:'Rejuran',value_cents:890000,performed_at:'2025-11-02'}]}];
+      procedures:[{name:'Toxina Full Face',product:'Dysport · Lote DY123',value_cents:590000,cost_cents:180000,performed_at:'2026-03-15'},{name:'Rejuran rostro',product:'Rejuran',value_cents:890000,cost_cents:320000,performed_at:'2025-11-02'}]}];
+    expenses=[{id:'ex1',description:'Renta del consultorio',category:'renta',amount_cents:1200000,expense_date:localISO(new Date())},{id:'ex2',description:'Insumos de bioseguridad',category:'insumos',amount_cents:85000,expense_date:localISO(new Date())}];
+    productCosts=[{id:'ins1',name:'Dysport',unit_label:'U',total_cost_cents:550000,yield_qty:200},{id:'ins2',name:'Sculptra',unit_label:'vial',total_cost_cents:1300000,yield_qty:2},{id:'ins3',name:'Radiesse',unit_label:'vial',total_cost_cents:390000,yield_qty:1},{id:'ins4',name:'ReMedium (PDRN + AH + Niacinamida)',unit_label:'jeringa',total_cost_cents:160000,yield_qty:1},{id:'ins5',name:'Rejuran rostro',unit_label:'jeringa',total_cost_cents:300000,yield_qty:1},{id:'ins6',name:'Rejuran ojos',unit_label:'jeringa',total_cost_cents:300000,yield_qty:1},{id:'ins7',name:'Ácido hialurónico (Relleno)',unit_label:'jeringa',total_cost_cents:145000,yield_qty:1}];
     const _n=new Date(),_t1=new Date(_n),_t2=new Date(_n);
     _t1.setHours(16,0,0,0);_t2.setDate(_n.getDate()+1);_t2.setHours(11,0,0,0);
     appts=[{id:'ap1',patient_id:'d1',starts_at:_t1.toISOString(),duration_min:60,treatment:'Toxina Full Face',status:'programada'},
