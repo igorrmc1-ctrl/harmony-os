@@ -3,6 +3,11 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+<meta name="theme-color" content="#0E0E12">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="apple-mobile-web-app-title" content="Harmony OS">
 <title>Harmony OS</title>
 <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 <style>
@@ -39,7 +44,8 @@
   .nav a .ic{width:19px;text-align:center;}
   .side-foot{margin-top:auto;padding:12px 8px;border-top:1px solid var(--border);}
   .side-foot .who{display:flex;align-items:center;gap:10px;margin-bottom:10px;}
-  .avatar{border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--gold));display:grid;place-items:center;font-weight:600;color:#1a1a1a;flex-shrink:0;width:36px;height:36px;font-size:14px;}
+  .avatar{border-radius:50%;background:linear-gradient(135deg,var(--rose),var(--gold));display:grid;place-items:center;font-weight:600;color:#1a1a1a;flex-shrink:0;width:36px;height:36px;font-size:14px;overflow:hidden;}
+  .avatar img{width:100%;height:100%;object-fit:cover;border-radius:50%;display:block;}
   .logout{font-size:12px;color:var(--muted);cursor:pointer;}
   .main{flex:1;display:flex;flex-direction:column;min-width:0;}
   .topbar{display:flex;align-items:center;gap:16px;padding:14px 24px;border-bottom:1px solid var(--border);position:sticky;top:0;background:rgba(14,14,18,.85);backdrop-filter:blur(12px);z-index:20;}
@@ -51,7 +57,16 @@
   .page-head{display:flex;justify-content:space-between;align-items:center;flex-wrap:wrap;gap:12px;margin-bottom:20px;}
   .page-head h1{font-size:24px;font-weight:600;}
   .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:18px;}
-  .grid{display:grid;gap:14px;} .kpis{grid-template-columns:repeat(auto-fit,minmax(170px,1fr));margin-bottom:8px;}
+  .grid{display:grid;gap:14px;} .kpis{grid-template-columns:repeat(auto-fit,minmax(150px,1fr));margin-bottom:8px;}
+  .today-row{display:flex;align-items:center;gap:12px;padding:11px 0;border-bottom:1px solid var(--border);cursor:pointer;}
+  .today-row:last-child{border-bottom:none;}
+  .today-row .tm{font-weight:700;font-size:13px;color:var(--rose2);min-width:44px;}
+  .today-row .tn{font-size:13.5px;font-weight:600;} .today-row .tt{font-size:11.5px;color:var(--muted);margin-top:1px;}
+  .today-row .st{margin-left:auto;flex-shrink:0;}
+  .act-row{display:flex;align-items:center;gap:10px;padding:10px 0;border-bottom:1px solid var(--border);font-size:12.5px;line-height:1.45;}
+  .act-row:last-child{border-bottom:none;}
+  .act-row .ic{font-size:15px;flex-shrink:0;} .act-row .btn.sm{margin-left:auto;flex-shrink:0;}
+  .bday{display:inline-flex;align-items:center;gap:6px;font-size:12px;background:rgba(201,166,107,.12);border:1px solid rgba(201,166,107,.4);color:#8a6420;border-radius:16px;padding:5px 11px;margin:3px 4px 3px 0;cursor:pointer;}
   .kpi .k-top{display:flex;align-items:center;gap:8px;color:var(--muted);font-size:13px;margin-bottom:10px;}
   .kpi .k-ic{width:30px;height:30px;border-radius:9px;background:var(--surface2);display:grid;place-items:center;font-size:15px;}
   .kpi .k-val{font-size:24px;font-weight:650;letter-spacing:-.5px;}
@@ -97,6 +112,7 @@
   .quote-row:last-child{border-bottom:none;}
   .quote-row .qd{color:var(--muted);font-size:12px;} .quote-row .qt{margin-left:auto;font-weight:600;}
   .stag{font-size:10.5px;padding:2px 8px;border-radius:12px;background:rgba(201,166,107,.15);color:var(--gold);}
+  .stag.won{background:rgba(46,158,90,.15);color:#2e9e5a;}
   .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--surface2);border:1px solid var(--green);color:var(--green);padding:10px 18px;border-radius:12px;font-size:13.5px;z-index:80;display:none;}
   .empty{color:var(--muted);font-size:13px;padding:12px 0;}
   /* ---------- ANAMNESE / PRONTUÁRIO ---------- */
@@ -156,7 +172,14 @@
   .ev .ev-r{margin-left:auto;text-align:right;flex-shrink:0;} .ev .ed{font-size:11.5px;color:var(--muted);} .ev .evv{font-size:13.5px;font-weight:600;margin-top:2px;}
   .wa{background:#1EBE5D;color:#fff;border:none;border-radius:12px;padding:10px 14px;font-size:13.5px;font-weight:600;cursor:pointer;display:inline-flex;align-items:center;gap:6px;}
   .slotgrid{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;}
-  .slot{aspect-ratio:3/4;border-radius:12px;background:var(--surface2);border:1.5px dashed var(--border);display:grid;place-items:center;color:var(--muted);font-size:11.5px;text-align:center;padding:6px;line-height:1.5;}
+  .slot{aspect-ratio:3/4;border-radius:12px;background:var(--surface2);border:1.5px dashed var(--border);display:grid;place-items:center;color:var(--muted);font-size:11.5px;text-align:center;padding:6px;line-height:1.5;position:relative;cursor:pointer;overflow:hidden;}
+  .slot img{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;}
+  .slot .scount{position:absolute;top:6px;right:6px;background:rgba(26,26,46,.72);color:#fff;font-size:10px;padding:2px 7px;border-radius:10px;z-index:2;}
+  .slot .slabel{position:absolute;bottom:0;left:0;right:0;background:linear-gradient(transparent,rgba(26,26,46,.72));color:#fff;font-size:10.5px;padding:14px 4px 5px;z-index:2;}
+  .ph-compare{display:grid;grid-template-columns:1fr 1fr;gap:8px;}
+  .ph-side img{width:100%;border-radius:10px;aspect-ratio:3/4;object-fit:cover;background:var(--surface2);display:block;}
+  .ph-side select{width:100%;margin-top:6px;font-size:11.5px;padding:5px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);}
+  .ph-tag{font-size:10px;letter-spacing:1.5px;text-transform:uppercase;color:var(--muted);margin-bottom:4px;text-align:center;}
   /* ---------- AGENDA ---------- */
   .daystrip{display:flex;gap:6px;overflow-x:auto;padding:2px 0 12px;}
   .day{min-width:46px;padding:8px 4px;border-radius:12px;background:var(--surface);border:1px solid var(--border);text-align:center;cursor:pointer;flex-shrink:0;}
@@ -178,6 +201,19 @@
   .stbtns{display:flex;gap:6px;flex-wrap:wrap;margin-top:6px;}
   .stbtns button{background:var(--surface2);border:1px solid var(--border);color:var(--muted);border-radius:9px;padding:7px 10px;font-size:12px;cursor:pointer;}
   .stbtns button.on{border-color:var(--rose);color:var(--rose2);}
+  .agmode{display:inline-flex;gap:4px;background:var(--surface);border:1px solid var(--border);border-radius:11px;padding:4px;margin-bottom:12px;}
+  .agmode button{background:transparent;border:none;color:var(--muted);padding:7px 18px;border-radius:8px;font-size:13px;font-weight:600;cursor:pointer;}
+  .agmode button.on{background:var(--surface2);color:var(--text);}
+  .wknav{display:flex;align-items:center;gap:12px;margin-bottom:14px;}
+  .wknav button{background:var(--surface);border:1px solid var(--border);color:var(--text);width:34px;height:34px;border-radius:10px;cursor:pointer;font-size:15px;}
+  .wknav .wktot{margin-left:auto;font-size:12.5px;color:var(--muted);}
+  .wkday{margin-bottom:16px;} .wkday.today .wkh b{color:var(--gold);}
+  .wkh{display:flex;align-items:center;gap:8px;padding:0 2px 8px;}
+  .wkh b{font-size:14.5px;} .wkh small{color:var(--muted);font-size:12px;}
+  .wkcount{margin-left:auto;font-size:11px;font-weight:600;padding:3px 10px;border-radius:12px;background:var(--surface2);color:var(--muted);}
+  .wkcount.has{background:rgba(201,123,142,.15);color:var(--rose2);}
+  .wkslot{display:flex;gap:10px;align-items:center;padding:9px 12px;border-radius:10px;background:var(--surface);border:1px solid var(--border);margin-bottom:6px;cursor:pointer;}
+  .wkslot .wt{font-size:13px;font-weight:700;min-width:44px;flex-shrink:0;}
   /* modals */
   .overlay{position:fixed;inset:0;background:rgba(0,0,0,.6);backdrop-filter:blur(4px);display:none;place-items:center;z-index:60;padding:18px;} .overlay.show{display:grid;}
   .modal{background:var(--surface);border:1px solid var(--border);border-radius:18px;padding:22px;width:100%;max-width:440px;max-height:88vh;overflow-y:auto;} .modal h3{font-size:17px;margin-bottom:14px;}
@@ -233,13 +269,7 @@
         <!-- DASH -->
         <div id="dash" class="view">
           <div class="page-head"><h1><span data-i18n="hi">Bem-vinda</span> 👋</h1></div>
-          <div class="grid kpis">
-            <div class="card kpi"><div class="k-top"><div class="k-ic">☺</div><span data-i18n="k_act">Pacientes</span></div><div class="k-val" id="kpiPatients">0</div></div>
-            <div class="card kpi"><div class="k-top"><div class="k-ic">◈</div><span data-i18n="k_proc">Procedimentos</span></div><div class="k-val" id="kpiProcs">0</div></div>
-            <div class="card kpi"><div class="k-top"><div class="k-ic">▦</div><span data-i18n="k_rev">Receita</span></div><div class="k-val" id="kpiRev">$0</div></div>
-            <div class="card kpi"><div class="k-top"><div class="k-ic">✦</div><span data-i18n="k_quotes">Cotizações</span></div><div class="k-val" id="kpiQuotes">0</div></div>
-            <div class="card kpi"><div class="k-top"><div class="k-ic">▦</div><span data-i18n="k_today">Citas hoy</span></div><div class="k-val" id="kpiToday">0</div></div>
-          </div>
+          <div id="dashBody"></div>
         </div>
 
         <!-- PACIENTES -->
@@ -287,6 +317,7 @@
         <!-- AGENDA -->
         <div id="age" class="view">
           <div class="page-head"><h1 data-i18n="nav_age">Agenda</h1><button class="btn" onclick="openApptModal()">+ <span data-i18n="new_appt">Nueva cita</span></button></div>
+          <div class="agmode" id="agModeWrap"><button data-m="day" class="on" onclick="setAgMode('day')" data-i18n="v_day">Día</button><button data-m="week" onclick="setAgMode('week')" data-i18n="v_week">Semana</button></div>
           <div class="daystrip" id="agStrip"></div>
           <div class="muted" id="agTitle" style="font-size:12.5px;margin-bottom:10px"></div>
           <div id="agBody"></div>
@@ -310,8 +341,13 @@
   <!-- Modais -->
   <div class="overlay" id="ovPatient"><div class="modal"><h3 data-i18n="new_pat">Novo paciente</h3>
     <div class="field"><label data-i18n="f_name">Nome</label><input id="npName"></div>
+    <div class="field"><label data-i18n="f_phone">Telefone</label>
+      <div style="display:flex;gap:6px">
+        <select id="npCC" style="flex:0 0 118px"></select>
+        <input id="npPhone" type="tel" placeholder="10 dígitos" style="flex:1"></div></div>
+    <div class="field"><label data-i18n="f_email">Email</label><input id="npEmail" type="email" placeholder="paciente@email.com"></div>
+    <div class="field"><label data-i18n="f_instagram">Instagram</label><input id="npInstagram" placeholder="@usuario"></div>
     <div class="field"><label data-i18n="f_birth">Nascimento</label><input id="npBirth" type="date"></div>
-    <div class="field"><label data-i18n="f_phone">Telefone</label><input id="npPhone"></div>
     <div class="field"><label data-i18n="f_skin">Tipo de pele</label><select id="npSkin"><option>Normal</option><option>Mixta</option><option>Grasa</option><option>Seca</option><option>Sensible</option></select></div>
     <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovPatient')" data-i18n="cancel">Cancelar</button><button class="btn" id="savePatBtn" onclick="savePatient()" data-i18n="save">Salvar</button></div></div></div>
 
@@ -319,8 +355,23 @@
     <div class="field"><label data-i18n="f_proc">Procedimento</label><select id="prName"></select></div>
     <div class="field"><label data-i18n="f_product">Produto / marca</label><input id="prProduct" placeholder="Dysport, Sculptra..."></div>
     <div class="field"><label data-i18n="f_lot">Lote</label><input id="prLot" placeholder="Lote do produto"></div>
+    <div class="field"><label data-i18n="f_qty">Cantidad aplicada</label><input id="prQty" placeholder="ej. 40U, 2.5ml"></div>
+    <div class="field"><label data-i18n="f_area">Zona aplicada</label><input id="prArea" placeholder="ej. Frente + Glabela"></div>
     <div class="field"><label data-i18n="f_value">Valor (MXN)</label><input id="prValue" type="number"></div>
     <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovProc')" data-i18n="cancel">Cancelar</button><button class="btn" id="saveProcBtn" onclick="saveProc()" data-i18n="save">Salvar</button></div></div></div>
+
+  <!-- MODAL FECHAR COTIZAÇÃO → PROCEDIMENTOS -->
+  <div class="overlay" id="ovCloseQuote"><div class="modal" id="closeQuoteBody" style="max-width:480px"></div></div>
+  <input type="file" id="cqScanInput" accept="image/*" capture="environment" style="display:none" onchange="cqScanFile(this.files[0])">
+
+  <!-- FOTOS: visualizador / comparador -->
+  <div class="overlay" id="ovPhotos"><div class="modal" id="phBody" style="max-width:520px"></div></div>
+  <input type="file" id="phInput" accept="image/*" multiple style="display:none" onchange="phFiles(this.files)">
+
+  <!-- FOTOS: upload em lote com classificação IA + mosaico -->
+  <div class="overlay" id="ovBulk"><div class="modal" id="bulkBody" style="max-width:520px"></div></div>
+  <div class="overlay" id="ovMosaic"><div class="modal" id="mosaicBody" style="max-width:460px"></div></div>
+  <input type="file" id="phBulkInput" accept="image/*" multiple style="display:none" onchange="phBulkFiles(this.files)">
 
   <!-- MODAL NOVA CITA -->
   <div class="overlay" id="ovAppt"><div class="modal"><h3 data-i18n="new_appt">Nueva cita</h3>
@@ -341,6 +392,11 @@
       <div class="wz-lang"><button id="wzES" class="on" onclick="wzSetLang('es')">ES</button><button id="wzEN" onclick="wzSetLang('en')">EN</button></div>
       <span class="wz-close" onclick="closeWizard()">✕</span></div>
     <div class="wz-prog"><i id="wzProg" style="width:0%"></i></div>
+    <div id="wzScanBar" style="padding:10px 20px;border-bottom:1px solid #eee;display:flex;align-items:center;gap:10px">
+      <button class="btn sm ghost" id="wzScanBtn" onclick="document.getElementById('wzScanInput').click()"></button>
+      <span id="wzScanStatus" style="font-size:12px;color:#888"></span>
+      <input type="file" id="wzScanInput" accept="image/*" capture="environment" style="display:none" onchange="wzScanFile(this.files[0])">
+    </div>
     <div class="wz-body" id="wzBody"></div>
     <div class="wz-foot"><div class="wz-foot-inner">
       <button class="btn ghost" id="wzBack" onclick="wzNav(-1)">Atrás</button>
@@ -354,8 +410,29 @@
 /* ============ CONFIG ============ */
 const SUPABASE_URL='https://lxcllodivejmyzknfkfh.supabase.co';
 const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Imx4Y2xsb2RpdmVqbXl6a25ma2ZoIiwicm9sZSI6ImFub24iLCJpYXQiOjE3ODU2Nzk4NjEsImV4cCI6MjEwMTI1NTg2MX0.2EBeQwvEb8GSYgQAWDTWwyV9V1hSMMgfvMgfSaWy79M';
+const SCAN_URL=SUPABASE_URL+'/functions/v1/anamnesis-scan';
+const PRODUCT_SCAN_URL=SUPABASE_URL+'/functions/v1/product-scan';
+const CLASSIFY_URL=SUPABASE_URL+'/functions/v1/photo-classify';
 const DEMO=new URLSearchParams(location.search).has('demo');
 let db=null; if(!DEMO){ try{ db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);}catch(e){console.error(e);} }
+
+/* Países / DDI — pacientes internacionales (MX, US, BR y más) */
+const COUNTRIES=[
+  {cc:'52',flag:'🇲🇽',label:'México'},
+  {cc:'1',flag:'🇺🇸',label:'Estados Unidos'},
+  {cc:'1',flag:'🇨🇦',label:'Canadá'},
+  {cc:'55',flag:'🇧🇷',label:'Brasil'},
+  {cc:'34',flag:'🇪🇸',label:'España'},
+  {cc:'57',flag:'🇨🇴',label:'Colombia'},
+  {cc:'54',flag:'🇦🇷',label:'Argentina'},
+  {cc:'56',flag:'🇨🇱',label:'Chile'},
+  {cc:'51',flag:'🇵🇪',label:'Perú'},
+  {cc:'593',flag:'🇪🇨',label:'Ecuador'},
+  {cc:'507',flag:'🇵🇦',label:'Panamá'},
+  {cc:'506',flag:'🇨🇷',label:'Costa Rica'},
+  {cc:'502',flag:'🇬🇹',label:'Guatemala'},
+  {cc:'598',flag:'🇺🇾',label:'Uruguay'}
+];
 
 /* ============ CATÁLOGO REAL HARMONY (MXN) ============ */
 const CATALOG=[
@@ -372,7 +449,7 @@ const CATALOG=[
    {id:'rej-rostro',name:'Rejuran rostro',price:8900,unit:'por jeringa'},
    {id:'rej-ojos',name:'Rejuran ojos',price:7900,unit:'por jeringa'}]},
  {cat:'Rellenos faciales',prod:'Ácido hialurónico',items:[
-   {id:'relleno',name:'Relleno',price:5900,unit:'por jeringa'}]},
+   {id:'relleno',name:'Relleno',price:5900,unit:'por jeringa',extra:{id:'relleno-extra',name:'↳ Jeringa extra (combo)',price:3000}}]},
  {cat:'Armonización facial',prod:'',items:[
    {id:'armonizacion',name:'Armonización',price:8900,unit:'desde'}]},
  {cat:'Tratamientos combinados',prod:'',items:[
@@ -386,21 +463,21 @@ const CATALOG=[
    {id:'p-regenera',name:'Regenera',price:15900,unit:'desde'},
    {id:'p-glow',name:'Glow',price:8500,unit:'desde'}]}
 ];
-const ALL_ITEMS={}; CATALOG.forEach(c=>c.items.forEach(i=>ALL_ITEMS[i.id]={...i,cat:c.cat,prod:c.prod}));
+const ALL_ITEMS={}; CATALOG.forEach(c=>c.items.forEach(i=>{ALL_ITEMS[i.id]={...i,cat:c.cat,prod:c.prod};if(i.extra)ALL_ITEMS[i.extra.id]={...i.extra,cat:c.cat,prod:c.prod,unit:''};}));
 
-let patients=[],quotes=[],anamneses=[],currentPatient=null,lang='es',signupMode=false,cart=[],discPct=null;
+let patients=[],quotes=[],anamneses=[],photos=[],CLINIC_ID=null,currentPatient=null,lang='es',signupMode=false,cart=[],discPct=null;
 const money=v=>'$'+(Math.round(v)||0).toLocaleString('es-MX');
 const initials=n=>(n||'?').split(' ').slice(0,2).map(w=>w[0]).join('').toUpperCase();
 const fmtDate=d=>{if(!d)return '—';const p=String(d).slice(0,10).split('-');return p.length===3?`${p[2]}/${p[1]}/${p[0].slice(2)}`:d;};
 
 /* ============ i18n ============ */
-const T={pt:{nav_dash:'Dashboard',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',role:'Administradora',logout:'Sair',search:'Buscar paciente...',hi:'Bem-vinda',k_act:'Pacientes',k_proc:'Procedimentos',k_rev:'Receita',k_quotes:'Cotizações',patients:'Pacientes',new_pat:'Novo paciente',no_pat:'Nenhum paciente ainda. Clique em "Novo paciente" para começar.',back:'Voltar',new_proc:'Registrar procedimento',f_name:'Nome',f_birth:'Nascimento',f_phone:'Telefone',f_skin:'Tipo de pele',f_proc:'Procedimento',f_product:'Produto / marca',f_lot:'Lote',f_value:'Valor (MXN)',cancel:'Cancelar',save:'Salvar',soon_t:'Em construção',soon_d:'A Agenda entra na próxima fatia.',skin:'Tipo de pele',allergy:'Alergias',tl:'Histórico de tratamentos',add_proc:'+ Procedimento',procs_n:'procedimentos',quoter:'Cotizador',quote:'Cotização',clear:'Limpar',f_patient:'Paciente',cart_empty:'Toque em + nos tratamentos para montar a proposta.',f_disc:'Desconto (MXN)',f_reason:'Motivo do desconto',f_pay:'Forma de pagamento',subtotal:'Subtotal',discount:'Desconto',save_quote:'Guardar cotização',quotes_t:'Cotizações',no_quotes:'Nenhuma cotização ainda.',saved:'Cotização salva! ✅',pat_saved:'Paciente salvo ✅',proc_saved:'Procedimento registrado ✅',no_patient:'Sem paciente',login_sub:'Entre para acessar a sua clínica',lbl_email:'E-mail',lbl_pass:'Senha',enter:'Entrar',create:'Criar conta',first:'Primeira vez?',have:'Já tem conta?',need_items:'Adicione ao menos um tratamento.',need_reason:'Descreva o motivo do desconto.',anam_do:'Realizar anamnese',anam_view:'Ver / editar',anam_done:'Assinada em',anam_img:'Uso de imagem autorizado',anam_none:'Anamnese pendente — realize na primeira consulta.',new_appt:'Nova consulta',f_date:'Data',f_time:'Hora',f_dur:'Duração (min)',f_treat:'Tratamento',f_notes:'Notas',k_today:'Consultas hoje'},
-       es:{nav_dash:'Panel',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',role:'Administradora',logout:'Salir',search:'Buscar paciente...',hi:'Bienvenida',k_act:'Pacientes',k_proc:'Procedimientos',k_rev:'Ingresos',k_quotes:'Cotizaciones',patients:'Pacientes',new_pat:'Nuevo paciente',no_pat:'Aún no hay pacientes. Haz clic en "Nuevo paciente" para empezar.',back:'Volver',new_proc:'Registrar procedimiento',f_name:'Nombre',f_birth:'Nacimiento',f_phone:'Teléfono',f_skin:'Tipo de piel',f_proc:'Procedimiento',f_product:'Producto / marca',f_lot:'Lote',f_value:'Valor (MXN)',cancel:'Cancelar',save:'Guardar',soon_t:'En construcción',soon_d:'La Agenda llega en la próxima fase.',skin:'Tipo de piel',allergy:'Alergias',tl:'Historial de tratamientos',add_proc:'+ Procedimiento',procs_n:'procedimientos',quoter:'Cotizador',quote:'Cotización',clear:'Limpiar',f_patient:'Paciente',cart_empty:'Toca + en los tratamientos para armar la propuesta.',f_disc:'Descuento (MXN)',f_reason:'Motivo del descuento',f_pay:'Forma de pago',subtotal:'Subtotal',discount:'Descuento',save_quote:'Guardar cotización',quotes_t:'Cotizaciones',no_quotes:'Aún no hay cotizaciones.',saved:'¡Cotización guardada! ✅',pat_saved:'Paciente guardado ✅',proc_saved:'Procedimiento registrado ✅',no_patient:'Sin paciente',login_sub:'Entra para acceder a tu clínica',lbl_email:'Correo',lbl_pass:'Contraseña',enter:'Entrar',create:'Crear cuenta',first:'¿Primera vez?',have:'¿Ya tienes cuenta?',need_items:'Agrega al menos un tratamiento.',need_reason:'Describe el motivo del descuento.',anam_do:'Realizar anamnesis',anam_view:'Ver / editar',anam_done:'Firmada el',anam_img:'Uso de imagen autorizado',anam_none:'Anamnesis pendiente — realízala en la primera consulta.',new_appt:'Nueva cita',f_date:'Fecha',f_time:'Hora',f_dur:'Duración (min)',f_treat:'Tratamiento',f_notes:'Notas',k_today:'Citas hoy'}};
+const T={pt:{nav_dash:'Dashboard',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',role:'Administradora',logout:'Sair',search:'Buscar paciente...',hi:'Bem-vinda',k_act:'Pacientes',k_proc:'Procedimentos',k_rev:'Receita',k_quotes:'Cotizações',patients:'Pacientes',new_pat:'Novo paciente',no_pat:'Nenhum paciente ainda. Clique em "Novo paciente" para começar.',back:'Voltar',new_proc:'Registrar procedimento',f_name:'Nome',f_birth:'Nascimento',f_phone:'Telefone',f_email:'Email',f_instagram:'Instagram',need_pat_min:'Adicione nome, telefone e ao menos e-mail ou Instagram.',f_skin:'Tipo de pele',f_proc:'Procedimento',f_product:'Produto / marca',f_lot:'Lote',f_qty:'Quantidade aplicada',f_area:'Zona aplicada',f_value:'Valor (MXN)',cancel:'Cancelar',save:'Salvar',soon_t:'Em construção',soon_d:'A Agenda entra na próxima fatia.',skin:'Tipo de pele',allergy:'Alergias',tl:'Histórico de tratamentos',add_proc:'+ Procedimento',procs_n:'procedimentos',quoter:'Cotizador',quote:'Cotização',clear:'Limpar',f_patient:'Paciente',cart_empty:'Toque em + nos tratamentos para montar a proposta.',f_disc:'Desconto (MXN)',f_reason:'Motivo do desconto',f_pay:'Forma de pagamento',subtotal:'Subtotal',discount:'Desconto',save_quote:'Guardar cotização',quotes_t:'Cotizações',no_quotes:'Nenhuma cotização ainda.',saved:'Cotização salva! ✅',pat_saved:'Paciente salvo ✅',proc_saved:'Procedimento registrado ✅',no_patient:'Sem paciente',login_sub:'Entre para acessar a sua clínica',lbl_email:'E-mail',lbl_pass:'Senha',enter:'Entrar',create:'Criar conta',first:'Primeira vez?',have:'Já tem conta?',need_items:'Adicione ao menos um tratamento.',need_reason:'Descreva o motivo do desconto.',anam_do:'Realizar anamnese',anam_view:'Ver / editar',anam_done:'Assinada em',anam_img:'Uso de imagem autorizado',anam_none:'Anamnese pendente — realize na primeira consulta.',new_appt:'Nova consulta',f_date:'Data',f_time:'Hora',f_dur:'Duração (min)',f_treat:'Tratamento',f_notes:'Notas',k_today:'Consultas hoje',v_day:'Dia',v_week:'Semana'},
+       es:{nav_dash:'Panel',nav_pac:'Pacientes',nav_cot:'Cotizador',nav_age:'Agenda',role:'Administradora',logout:'Salir',search:'Buscar paciente...',hi:'Bienvenida',k_act:'Pacientes',k_proc:'Procedimientos',k_rev:'Ingresos',k_quotes:'Cotizaciones',patients:'Pacientes',new_pat:'Nuevo paciente',no_pat:'Aún no hay pacientes. Haz clic en "Nuevo paciente" para empezar.',back:'Volver',new_proc:'Registrar procedimiento',f_name:'Nombre',f_birth:'Nacimiento',f_phone:'Teléfono',f_email:'Correo',f_instagram:'Instagram',need_pat_min:'Agrega nombre, teléfono y al menos correo o Instagram.',f_skin:'Tipo de piel',f_proc:'Procedimiento',f_product:'Producto / marca',f_lot:'Lote',f_qty:'Cantidad aplicada',f_area:'Zona aplicada',f_value:'Valor (MXN)',cancel:'Cancelar',save:'Guardar',soon_t:'En construcción',soon_d:'La Agenda llega en la próxima fase.',skin:'Tipo de piel',allergy:'Alergias',tl:'Historial de tratamientos',add_proc:'+ Procedimiento',procs_n:'procedimientos',quoter:'Cotizador',quote:'Cotización',clear:'Limpiar',f_patient:'Paciente',cart_empty:'Toca + en los tratamientos para armar la propuesta.',f_disc:'Descuento (MXN)',f_reason:'Motivo del descuento',f_pay:'Forma de pago',subtotal:'Subtotal',discount:'Descuento',save_quote:'Guardar cotización',quotes_t:'Cotizaciones',no_quotes:'Aún no hay cotizaciones.',saved:'¡Cotización guardada! ✅',pat_saved:'Paciente guardado ✅',proc_saved:'Procedimiento registrado ✅',no_patient:'Sin paciente',login_sub:'Entra para acceder a tu clínica',lbl_email:'Correo',lbl_pass:'Contraseña',enter:'Entrar',create:'Crear cuenta',first:'¿Primera vez?',have:'¿Ya tienes cuenta?',need_items:'Agrega al menos un tratamiento.',need_reason:'Describe el motivo del descuento.',anam_do:'Realizar anamnesis',anam_view:'Ver / editar',anam_done:'Firmada el',anam_img:'Uso de imagen autorizado',anam_none:'Anamnesis pendiente — realízala en la primera consulta.',new_appt:'Nueva cita',f_date:'Fecha',f_time:'Hora',f_dur:'Duración (min)',f_treat:'Tratamiento',f_notes:'Notas',k_today:'Citas hoy',v_day:'Día',v_week:'Semana'}};
 const tr=k=>T[lang][k]||k;
 function setLang(l){lang=l;document.getElementById('pt').classList.toggle('on',l==='pt');document.getElementById('es').classList.toggle('on',l==='es');
   document.querySelectorAll('[data-i18n]').forEach(e=>{const k=e.getAttribute('data-i18n');if(T[l][k])e.textContent=T[l][k];});
   document.querySelectorAll('[data-i18n-ph]').forEach(e=>{const k=e.getAttribute('data-i18n-ph');if(T[l][k])e.placeholder=T[l][k];});
-  refreshLoginTexts();renderPatients();renderCatalog();renderCart();renderPatientSelect();if(currentPatient)renderDetail();document.documentElement.lang=l;}
+  refreshLoginTexts();renderPatients();renderCatalog();renderCart();renderPatientSelect();renderAgenda();if(currentPatient)renderDetail();document.documentElement.lang=l;}
 function refreshLoginTexts(){const s=document.getElementById('loginSub');if(!s)return;s.textContent=tr('login_sub');document.getElementById('lblEmail').textContent=tr('lbl_email');document.getElementById('lblPass').textContent=tr('lbl_pass');
   document.getElementById('authBtn').textContent=signupMode?tr('create'):tr('enter');
   document.getElementById('toggleAuth').innerHTML=(signupMode?tr('have'):tr('first'))+' <a onclick="toggleMode()">'+(signupMode?tr('enter'):tr('create'))+'</a>';}
@@ -434,56 +511,74 @@ async function onLogin(name){
 /* ============ DADOS (Supabase ou demo) ============ */
 async function loadAll(){
   if(DEMO){renderAll();return;}
-  const[p,q,an,ap]=await Promise.all([
+  const[p,q,an,ap,ph]=await Promise.all([
     db.from('patients').select('*, procedures(*)').order('created_at',{ascending:true}),
     db.from('quotes').select('*').order('created_at',{ascending:false}),
     db.from('anamneses').select('*').order('created_at',{ascending:false}),
-    db.from('appointments').select('*').order('starts_at',{ascending:true})
+    db.from('appointments').select('*').order('starts_at',{ascending:true}),
+    db.from('patient_photos').select('*').order('taken_at',{ascending:false})
   ]);
   if(!p.error)patients=(p.data||[]).map(x=>({...x,procedures:(x.procedures||[]).sort((a,b)=>String(b.performed_at||'').localeCompare(String(a.performed_at||'')))}));
   quotes=q.error?[]:(q.data||[]);
   anamneses=an.error?[]:(an.data||[]);
   appts=ap.error?[]:(ap.data||[]);
+  photos=ph.error?[]:(ph.data||[]);
+  await buildAvatars();
   renderAll();
 }
 function renderAll(){renderPatients();renderDash();renderCatalog();renderCart();renderPatientSelect();}
 async function savePatient(){
-  const name=document.getElementById('npName').value.trim();if(!name)return;
-  const rec={full_name:name,birth_date:document.getElementById('npBirth').value||null,phone:document.getElementById('npPhone').value||null,skin_type:document.getElementById('npSkin').value};
+  const name=document.getElementById('npName').value.trim();
+  const phoneDigits=document.getElementById('npPhone').value.trim();
+  const email=document.getElementById('npEmail').value.trim();
+  const instagram=document.getElementById('npInstagram').value.trim();
+  if(!name||!phoneDigits||!(email||instagram)){toast(tr('need_pat_min'));return;}
+  const cc=document.getElementById('npCC').value;
+  const phone='+'+cc+' '+phoneDigits;
+  const rec={full_name:name,birth_date:document.getElementById('npBirth').value||null,phone,email:email||null,instagram:instagram||null,skin_type:document.getElementById('npSkin').value};
   if(DEMO){patients.push({id:'d'+Date.now(),...rec,procedures:[]});}
   else{const btn=document.getElementById('savePatBtn');btn.disabled=true;const{error}=await db.from('patients').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
   closeModal('ovPatient');renderAll();toast(tr('pat_saved'));
 }
 async function saveProc(){
   const v=parseInt(document.getElementById('prValue').value||'0',10);if(!v)return;
-  const rec={patient_id:currentPatient.id,name:document.getElementById('prName').value,product:[document.getElementById('prProduct').value,document.getElementById('prLot').value?('Lote '+document.getElementById('prLot').value):''].filter(Boolean).join(' · ')||null,value_cents:v*100,performed_at:new Date().toISOString().slice(0,10)};
+  const rec={patient_id:currentPatient.id,name:document.getElementById('prName').value,product:[document.getElementById('prProduct').value,document.getElementById('prLot').value?('Lote '+document.getElementById('prLot').value):''].filter(Boolean).join(' · ')||null,applied_qty:document.getElementById('prQty').value||null,area:document.getElementById('prArea').value||null,value_cents:v*100,performed_at:new Date().toISOString().slice(0,10)};
   if(DEMO){currentPatient.procedures.unshift({...rec});}
   else{const btn=document.getElementById('saveProcBtn');btn.disabled=true;const{error}=await db.from('procedures').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();currentPatient=patients.find(p=>p.id===currentPatient.id);}
   closeModal('ovProc');renderDetail();renderDash();toast(tr('proc_saved'));
 }
 
 /* ============ COTIZADOR ============ */
+function catRow(i,indent){
+  return `<div class="cat-item"${indent?' style="opacity:.8;padding-left:14px"':''}>
+      <div><div class="cn"${indent?' style="font-size:12.5px"':''}>${i.name}</div>${i.note?`<div class="cd">${i.note}</div>`:''}</div>
+      <div class="cp">${i.unit==='desde'?'<small>desde </small>':''}${money(i.price)}${i.unit&&i.unit!=='desde'?`<br><small>${i.unit}</small>`:''}</div>
+      <div id="catAct_${i.id}" style="flex-shrink:0">${catActionHTML(i.id)}</div>
+    </div>`;
+}
 function renderCatalog(){
   const el=document.getElementById('catalogPanel');if(!el)return;
   el.innerHTML=CATALOG.map(c=>`<div class="cat-block">
     <div class="cat-head"><b>${c.cat}</b>${c.prod?`<small>${c.prod}</small>`:''}</div>
-    ${c.items.map(i=>`<div class="cat-item">
-      <div><div class="cn">${i.name}</div>${i.note?`<div class="cd">${i.note}</div>`:''}</div>
-      <div class="cp">${i.unit==='desde'?'<small>desde </small>':''}${money(i.price)}${i.unit&&i.unit!=='desde'?`<br><small>${i.unit}</small>`:''}</div>
-      <button class="addbtn" onclick="addToCart('${i.id}')">+</button>
-    </div>`).join('')}
+    ${c.items.map(i=>catRow(i)+(i.extra?catRow({...i.extra,unit:'',note:''},true):'')).join('')}
   </div>`).join('');
 }
+function catActionHTML(id){
+  const l=cart.find(x=>x.id===id);
+  if(!l)return `<button class="addbtn" onclick="addToCart('${id}')">+</button>`;
+  return `<div class="qty"><button onclick="chQty('${id}',-1)">−</button><span>${l.qty}</span><button onclick="chQty('${id}',1)">+</button></div>`;
+}
+function syncCatAction(id){const el=document.getElementById('catAct_'+id);if(el)el.innerHTML=catActionHTML(id);}
 function addToCart(id){
   const found=cart.find(l=>l.id===id);
   if(found)found.qty++;
   else{const it=ALL_ITEMS[id];cart.push({id,name:it.name,price:it.price,qty:1});}
-  renderCart();
+  renderCart();syncCatAction(id);
 }
-function chQty(id,d){const l=cart.find(x=>x.id===id);if(!l)return;l.qty+=d;if(l.qty<=0)cart=cart.filter(x=>x.id!==id);renderCart();}
-function rmLine(id){cart=cart.filter(x=>x.id!==id);renderCart();}
+function chQty(id,d){const l=cart.find(x=>x.id===id);if(!l)return;l.qty+=d;if(l.qty<=0)cart=cart.filter(x=>x.id!==id);renderCart();syncCatAction(id);}
+function rmLine(id){cart=cart.filter(x=>x.id!==id);renderCart();syncCatAction(id);}
 function chPrice(id,v){const l=cart.find(x=>x.id===id);if(l)l.price=parseInt(v||'0',10)||0;renderTotals();}
-function clearCart(){cart=[];discPct=null;document.getElementById('qDisc').value=0;document.getElementById('qReason').value='';renderCart();}
+function clearCart(){cart=[];discPct=null;document.getElementById('qDisc').value=0;document.getElementById('qReason').value='';renderCart();renderCatalog();}
 function setDiscPct(p){discPct=p;renderCart();}
 function subTotal(){return cart.reduce((a,l)=>a+l.price*l.qty,0);}
 function discVal(){if(discPct!=null)return Math.round(subTotal()*discPct/100);return parseInt(document.getElementById('qDisc').value||'0',10)||0;}
@@ -526,6 +621,92 @@ async function saveQuote(){
   if(DEMO){quotes.unshift({id:'q'+Date.now(),...rec,created_at:new Date().toISOString()});}
   else{const btn=document.getElementById('saveQuoteBtn');btn.disabled=true;const{error}=await db.from('quotes').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
   clearCart();renderDash();toast(tr('saved'));
+}
+
+/* ============ FECHAR COTIZAÇÃO → PROCEDIMENTOS ============ */
+/* Fluxo rápido: transforma cada item da cotização num procedimento registrado,
+   com opção de escanear o produto (caixa/rótulo) para ler produto+lote via IA. */
+let cqQuote=null,cqRows=[],cqScanIdx=null,cqScanning=false;
+function openCloseQuote(qid){
+  cqQuote=quotes.find(q=>q.id===qid);if(!cqQuote)return;
+  cqRows=(cqQuote.items||[]).map(it=>({...it,product:'',lot:'',qtyApplied:'',area:'',finalPrice:it.price*it.qty}));
+  renderCloseQuoteModal();
+  document.getElementById('ovCloseQuote').classList.add('show');
+}
+function closeCqModal(){document.getElementById('ovCloseQuote').classList.remove('show');cqQuote=null;cqRows=[];}
+function cqSync(){cqRows.forEach((r,i)=>{
+  const pEl=document.getElementById('cqProduct_'+i),lEl=document.getElementById('cqLot_'+i),
+        qEl=document.getElementById('cqQty_'+i),aEl=document.getElementById('cqArea_'+i),fEl=document.getElementById('cqPrice_'+i);
+  if(pEl)r.product=pEl.value;if(lEl)r.lot=lEl.value;if(qEl)r.qtyApplied=qEl.value;if(aEl)r.area=aEl.value;
+  if(fEl)r.finalPrice=parseInt(fEl.value||'0',10)||0;
+});}
+function renderCloseQuoteModal(){
+  const el=document.getElementById('closeQuoteBody');if(!el||!cqQuote)return;
+  el.innerHTML=`<h3>${L('Fechar cotización','Fechar cotização')}</h3>
+    <div class="wz-sub" style="margin-bottom:10px">${L('Confirma lo realmente aplicado en cada tratamiento — puedes escribir o escanear la caja del producto.','Confirme o que foi realmente aplicado em cada tratamento — você pode digitar ou escanear a caixa do produto.')}</div>
+    ${cqRows.map((r,i)=>`<div class="field" style="margin-bottom:14px;padding-bottom:12px;border-bottom:1px solid var(--border)">
+      <label>${r.name}</label>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+        <input id="cqProduct_${i}" placeholder="${L('Producto / marca','Produto / marca')}" value="${(r.product||'').replace(/"/g,'&quot;')}" style="flex:1.3">
+        <input id="cqLot_${i}" placeholder="${L('Lote','Lote')}" value="${(r.lot||'').replace(/"/g,'&quot;')}" style="flex:1">
+        <button class="btn sm ghost" style="white-space:nowrap" ${cqScanning&&cqScanIdx===i?'disabled':''} onclick="cqScanClick(${i})">${cqScanning&&cqScanIdx===i?'…':'📷'}</button>
+      </div>
+      <div style="display:flex;gap:6px;align-items:center;margin-bottom:6px">
+        <input id="cqQty_${i}" placeholder="${L('Cantidad aplicada (ej. 40U, 2.5ml)','Quantidade aplicada (ex. 40U, 2.5ml)')}" value="${(r.qtyApplied||'').replace(/"/g,'&quot;')}" style="flex:1">
+        <input id="cqArea_${i}" placeholder="${L('Zona aplicada','Zona aplicada')}" value="${(r.area||'').replace(/"/g,'&quot;')}" style="flex:1">
+      </div>
+      <div style="display:flex;align-items:center;gap:6px">
+        <small style="color:var(--muted)">${L('Valor cobrado','Valor cobrado')}</small>
+        <input id="cqPrice_${i}" type="number" value="${r.finalPrice}" style="width:100px;background:var(--surface2);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:12px;padding:3px 6px" onchange="cqSync()"> MXN
+      </div></div>`).join('')}
+    <div class="modal-actions"><button class="btn ghost" onclick="closeCqModal()">${L('Cancelar','Cancelar')}</button><button class="btn" id="cqConfirmBtn" onclick="confirmCloseQuote()">${L('Fechar y registrar','Fechar e registrar')}</button></div>`;
+}
+function cqScanClick(i){cqSync();cqScanIdx=i;document.getElementById('cqScanInput').click();}
+async function cqScanFile(file){
+  document.getElementById('cqScanInput').value='';
+  if(!file||cqScanning||cqScanIdx==null)return;
+  if(DEMO){toast(L('Escaneo por foto no disponible en modo demo.','Escaneio por foto não disponível no modo demo.'));return;}
+  cqScanning=true;renderCloseQuoteModal();
+  try{
+    const dataUrl=await wzCompressImage(file);
+    const image_base64=dataUrl.split(',')[1];
+    const {data:{session}}=await db.auth.getSession();
+    const res=await fetch(PRODUCT_SCAN_URL,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+(session?session.access_token:SUPABASE_KEY)},
+      body:JSON.stringify({image_base64,media_type:'image/jpeg'})});
+    const out=await res.json();
+    if(!res.ok||out.error)throw new Error(out.error||'scan failed');
+    const found=out.data||{};
+    if(found.product)cqRows[cqScanIdx].product=found.product;
+    if(found.lot)cqRows[cqScanIdx].lot=found.lot;
+    toast((found.product||found.lot)?L('Producto leído — revisa antes de confirmar.','Produto lido — revise antes de confirmar.'):L('No se pudo leer el producto. Escribe manualmente.','Não foi possível ler o produto. Digite manualmente.'));
+  }catch(e){
+    console.error(e);toast(L('No se pudo leer la foto. Escribe manualmente.','Não foi possível ler a foto. Digite manualmente.'));
+  }finally{
+    cqScanning=false;cqScanIdx=null;renderCloseQuoteModal();
+  }
+}
+async function confirmCloseQuote(){
+  if(!cqQuote)return;
+  cqSync();
+  const today=new Date().toISOString().slice(0,10);
+  const recs=cqRows.map(r=>({patient_id:cqQuote.patient_id,name:r.name,
+    product:[r.product,r.lot?('Lote '+r.lot):''].filter(Boolean).join(' · ')||null,
+    applied_qty:r.qtyApplied||null,area:r.area||null,
+    value_cents:(r.finalPrice||0)*100,performed_at:today}));
+  const btn=document.getElementById('cqConfirmBtn');if(btn)btn.disabled=true;
+  if(DEMO){
+    const pat=patients.find(p=>p.id===cqQuote.patient_id);
+    if(pat){if(!pat.procedures)pat.procedures=[];recs.forEach(r=>pat.procedures.unshift({id:'pr'+Date.now()+Math.random(),...r}));}
+    cqQuote.status='cerrada';
+  }else{
+    const {error:e1}=await db.from('procedures').insert(recs);
+    if(e1){if(btn)btn.disabled=false;alert(e1.message);return;}
+    const {error:e2}=await db.from('quotes').update({status:'cerrada'}).eq('id',cqQuote.id);
+    if(e2){if(btn)btn.disabled=false;alert(e2.message);return;}
+    await loadAll();
+    currentPatient=patients.find(p=>p.id===currentPatient.id)||currentPatient;
+  }
+  closeCqModal();renderDetail();renderDash();toast(L('¡Cotización cerrada y procedimientos registrados! ✅','Cotização fechada e procedimentos registrados! ✅'));
 }
 
 /* ============ ANAMNESE (Prontuário) ============ */
@@ -578,14 +759,16 @@ const ANAM=[
 ];
 const LEGAL_ES='El paciente, al firmar el presente cuestionario, declara que toda la información proporcionada es veraz y completa, conforme a la NOM-004-SSA3-2012 y el Reglamento de la Ley General de Salud. La atención médica del consultorio de la Dra. Isabella Zanata Spohr (cédula profesional 14497094, Aviso de Funcionamiento No. 2409155036X01105, Calle Querétaro 27, consultorio 102, Roma Norte, CDMX) se presta bajo los principios científicos y éticos de la práctica médica. Los datos aquí recabados se utilizarán conforme al Aviso de Privacidad disponible en el consultorio y sólo serán revelados por ordenamiento judicial o arbitraje médico. El paciente declara conocer las posibles reacciones y contraindicaciones del tratamiento indicado en su expediente.';
 const CONSENT_ES='Autorizo a la Dra. Isabella Zanata Spohr el uso de mi imagen (fotografías y videos de antes y después) para promoción y creación de contenido en su sitio web y redes sociales, conforme a la Ley Federal del Derecho de Autor. Autorización válida por 10 años, renovable. Recibiré por correo electrónico la versión a publicar y contaré con 5 días hábiles para manifestar inconformidades.';
-const WZT={es:{back:'Atrás',next:'Siguiente',save:'Guardar anamnesis',sign_t:'Firma y consentimiento',sign_sub:'Lee y firma con el dedo o el mouse',sign_here:'Firma aquí',clear:'Borrar',img_consent:'Autorizo el uso de mi imagen (antes/después) para redes sociales',img_email:'Correo para aprobar publicaciones',need_sig:'La firma es obligatoria.',yes:'Sí',no:'No',saved:'Anamnesis guardada ✅'},
-           en:{back:'Back',next:'Next',save:'Save questionnaire',sign_t:'Signature & consent',sign_sub:'Read and sign with your finger or mouse',sign_here:'Sign here',clear:'Clear',img_consent:'I authorize the use of my image (before/after) on social media',img_email:'Email to approve publications',need_sig:'Signature is required.',yes:'Yes',no:'No',saved:'Questionnaire saved ✅'}};
-let wzLang='es',wzStep=0,wzData={},wzPatientId=null,sigCanvas=null,sigCtx=null,sigDirty=false;
+const WZT={es:{back:'Atrás',next:'Siguiente',save:'Guardar anamnesis',sign_t:'Firma y consentimiento',sign_sub:'Lee y firma con el dedo o el mouse',sign_here:'Firma aquí',clear:'Borrar',img_consent:'Autorizo el uso de mi imagen (antes/después) para redes sociales',img_email:'Correo para aprobar publicaciones',need_sig:'La firma es obligatoria.',yes:'Sí',no:'No',saved:'Anamnesis guardada ✅',
+               scan_btn:'📷 Escanear papel',scan_wait:'Analizando foto…',scan_ok:'{n} campos completados por IA — revisa cada paso antes de guardar',scan_none:'No se detectaron campos legibles. Llena manualmente.',scan_err:'No se pudo leer la foto. Intenta de nuevo o llena manualmente.',scan_badge:'IA · revisar'},
+           en:{back:'Back',next:'Next',save:'Save questionnaire',sign_t:'Signature & consent',sign_sub:'Read and sign with your finger or mouse',sign_here:'Sign here',clear:'Clear',img_consent:'I authorize the use of my image (before/after) on social media',img_email:'Email to approve publications',need_sig:'Signature is required.',yes:'Yes',no:'No',saved:'Questionnaire saved ✅',
+               scan_btn:'📷 Scan paper form',scan_wait:'Analyzing photo…',scan_ok:'{n} fields filled by AI — review each step before saving',scan_none:'No readable fields detected. Fill in manually.',scan_err:'Could not read the photo. Try again or fill manually.',scan_badge:'AI · review'}};
+let wzLang='es',wzStep=0,wzData={},wzPatientId=null,sigCanvas=null,sigCtx=null,sigDirty=false,wzAIKeys=new Set(),wzScanning=false;
 const wzt=k=>WZT[wzLang][k];
 
 function openWizard(){
   if(!currentPatient)return;
-  wzPatientId=currentPatient.id;wzStep=0;
+  wzPatientId=currentPatient.id;wzStep=0;wzAIKeys=new Set();wzScanning=false;
   const existing=anamneses.find(a=>a.patient_id===wzPatientId);
   wzData=existing?JSON.parse(JSON.stringify(existing.data||{})):{};
   document.getElementById('wizard').classList.add('show');
@@ -597,21 +780,25 @@ function wzNav(d){
   if(d>0&&wzStep===ANAM.length){saveAnamnese();return;}
   wzStep=Math.max(0,Math.min(ANAM.length,wzStep+d));renderWzStep();
 }
+function wzBadge(k){return wzAIKeys.has(k)?`<span style="background:#eef4ff;color:#3b5bdb;font-size:10px;font-weight:700;padding:2px 6px;border-radius:6px;margin-left:6px;vertical-align:middle">${wzt('scan_badge')}</span>`:'';}
 function renderWzStep(){
   const total=ANAM.length+1;
   document.getElementById('wzProg').style.width=Math.round((wzStep+1)/total*100)+'%';
   document.getElementById('wzBack').textContent=wzt('back');
   document.getElementById('wzBack').style.visibility=wzStep===0?'hidden':'visible';
   document.getElementById('wzNext').textContent=wzStep===ANAM.length?wzt('save'):wzt('next');
+  const scanBtn=document.getElementById('wzScanBtn');
+  if(scanBtn){scanBtn.textContent=wzScanning?wzt('scan_wait'):wzt('scan_btn');scanBtn.disabled=wzScanning;}
+  document.getElementById('wzScanBar').style.display=wzStep<ANAM.length?'flex':'none';
   const body=document.getElementById('wzBody');
   if(wzStep<ANAM.length){
     const s=ANAM[wzStep];
     body.innerHTML=`<h2>${s.title[wzLang]}</h2><div class="wz-sub">${s.sub[wzLang]}</div>`+s.fields.map(f=>{
       const v=wzData[f.k];
-      if(f.t==='text')return `<div class="wz-q"><label>${f.l[wzLang]}</label><input type="text" value="${(v||'').replace(/"/g,'&quot;')}" oninput="wzData['${f.k}']=this.value"></div>`;
-      if(f.t==='chk')return `<div class="chkrow ${v?'on':''}" onclick="wzToggle('${f.k}',this)"><div class="box">${v?'✓':''}</div>${f.l[wzLang]}</div>`;
+      if(f.t==='text')return `<div class="wz-q"><label>${f.l[wzLang]}${wzBadge(f.k)}</label><input type="text" value="${(v||'').replace(/"/g,'&quot;')}" oninput="wzData['${f.k}']=this.value"></div>`;
+      if(f.t==='chk')return `<div class="chkrow ${v?'on':''}" onclick="wzToggle('${f.k}',this)"><div class="box">${v?'✓':''}</div>${f.l[wzLang]}${wzBadge(f.k)}</div>`;
       const yes=v&&v.yes===true,no=v&&v.yes===false;
-      return `<div class="wz-q"><label>${f.l[wzLang]}</label>
+      return `<div class="wz-q"><label>${f.l[wzLang]}${wzBadge(f.k)}</label>
         <div class="yn"><button class="${yes?'on':''}" onclick="wzYN('${f.k}',true)">${wzt('yes')}</button><button class="${no?'on':''}" onclick="wzYN('${f.k}',false)">${wzt('no')}</button></div>
         ${f.t==='ynd'&&yes?`<input type="text" style="margin-top:8px" placeholder="..." value="${((v&&v.detail)||'').replace(/"/g,'&quot;')}" oninput="wzData['${f.k}'].detail=this.value">`:''}</div>`;
     }).join('');
@@ -629,6 +816,47 @@ function renderWzStep(){
 }
 function wzYN(k,val){if(!wzData[k]||typeof wzData[k]!=='object')wzData[k]={};wzData[k].yes=val;if(!val)wzData[k].detail='';renderWzStep();}
 function wzToggle(k,el){wzData[k]=!wzData[k];if(el&&k[0]!=='_'){el.classList.toggle('on',wzData[k]);el.querySelector('.box').textContent=wzData[k]?'✓':'';}}
+/* escaneo de anamnesis en papel: foto → IA de visión → prellenado (con revisión obligatoria) */
+function wzCompressImage(file){
+  return new Promise((resolve,reject)=>{
+    const img=new Image(),reader=new FileReader();
+    reader.onload=e=>{img.onload=()=>{
+      const maxDim=1600;let w=img.width,h=img.height;
+      if(w>maxDim||h>maxDim){const r=Math.min(maxDim/w,maxDim/h);w=Math.round(w*r);h=Math.round(h*r);}
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      resolve(c.toDataURL('image/jpeg',0.82));
+    };img.onerror=reject;img.src=e.target.result;};
+    reader.onerror=reject;reader.readAsDataURL(file);
+  });
+}
+async function wzScanFile(file){
+  document.getElementById('wzScanInput').value='';
+  if(!file||wzScanning)return;
+  if(DEMO){toast(L('Escaneo por foto no disponible en modo demo.','Escaneio por foto não disponível no modo demo.'));return;}
+  wzScanning=true;renderWzStep();
+  try{
+    const dataUrl=await wzCompressImage(file);
+    const image_base64=dataUrl.split(',')[1];
+    const {data:{session}}=await db.auth.getSession();
+    const res=await fetch(SCAN_URL,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+(session?session.access_token:SUPABASE_KEY)},
+      body:JSON.stringify({image_base64,media_type:'image/jpeg'})});
+    const out=await res.json();
+    if(!res.ok||out.error)throw new Error(out.error||'scan failed');
+    const found=out.data||{};
+    let n=0;
+    for(const k in found){
+      if(wzData[k]&&typeof wzData[k]==='object'&&!Array.isArray(wzData[k])&&wzData[k].yes!==undefined)continue; // não sobrescreve resposta já dada
+      if(typeof wzData[k]==='string'&&wzData[k])continue;
+      if(wzData[k]===true)continue;
+      wzData[k]=found[k];wzAIKeys.add(k);n++;
+    }
+    wzScanning=false;wzStep=0;renderWzStep();
+    toast(n>0?wzt('scan_ok').replace('{n}',n):wzt('scan_none'));
+  }catch(e){
+    console.error(e);wzScanning=false;renderWzStep();toast(wzt('scan_err'));
+  }
+}
 /* assinatura */
 function initSig(){
   sigCanvas=document.getElementById('sigPad');if(!sigCanvas)return;
@@ -682,11 +910,74 @@ function alertsFor(a){
 }
 
 /* ============ RENDER GERAL ============ */
+function dashWa(id){const p=patients.find(x=>x.id===id);if(p&&p.phone)window.open(waLink(p),'_blank');else if(p)openDetail(p.id);}
 function renderDash(){
-  let procs=0,rev=0;patients.forEach(p=>(p.procedures||[]).forEach(pr=>{procs++;rev+=(pr.value_cents||0)/100;}));
-  const e=id=>document.getElementById(id);
-  if(e('kpiPatients')){e('kpiPatients').textContent=patients.length;e('kpiProcs').textContent=procs;e('kpiRev').textContent=money(rev);e('kpiQuotes').textContent=quotes.length;
-    if(e('kpiToday')){const td=localISO(new Date());e('kpiToday').textContent=appts.filter(a=>a.status!=='cancelada'&&localISO(new Date(a.starts_at))===td).length;}}
+  const el=document.getElementById('dashBody');if(!el)return;
+  const today=localISO(new Date()),week=weekOf(today),mm=today.slice(0,7);
+  const daysAgo=d=>Math.floor((Date.now()-new Date(d).getTime())/86400000);
+
+  /* citas de hoy */
+  const todayAppts=appts.filter(a=>a.status!=='cancelada'&&localISO(new Date(a.starts_at))===today)
+    .sort((a,b)=>String(a.starts_at).localeCompare(String(b.starts_at)));
+
+  /* fechado na semana e no mês (procedimentos realizados) */
+  let wkRev=0,wkCount=0,moRev=0;
+  patients.forEach(p=>(p.procedures||[]).forEach(pr=>{
+    const d=String(pr.performed_at||'').slice(0,10);
+    if(week.includes(d)){wkRev+=(pr.value_cents||0)/100;wkCount++;}
+    if(d.slice(0,7)===mm)moRev+=(pr.value_cents||0)/100;
+  }));
+
+  /* propostas abertas */
+  const open=quotes.filter(q=>q.status==='propuesta');
+  const openVal=open.reduce((a,q)=>a+(q.total_cents||0)/100,0);
+
+  /* ações do dia */
+  const acts=[];
+  todayAppts.forEach(a=>{
+    const p=patients.find(x=>x.id===a.patient_id);
+    if(p&&!anamneseFor(p.id))acts.push({ic:'⚠️',t:`<b>${p.full_name}</b> — ${L('cita hoy sin anamnesis firmada','consulta hoje sem anamnese assinada')}`,cta:L('Resolver','Resolver'),fn:`openDetail('${p.id}')`});
+  });
+  const overs=[];
+  patients.forEach(p=>clocksFor(p).forEach(k=>{if(k.status==='over')overs.push({p,k});}));
+  overs.sort((a,b)=>a.k.left-b.k.left);
+  overs.slice(0,3).forEach(({p,k})=>acts.push({ic:'🕐',t:`<b>${p.full_name}</b> — ${k.c.label} ${L('vencido hace ','vencido há ')}${-k.left}${L(' días',' dias')}`,cta:'💬 WhatsApp',fn:`dashWa('${p.id}')`}));
+  open.slice(0,3).forEach(q=>{
+    const p=patients.find(x=>x.id===q.patient_id);if(!p)return;
+    const age=daysAgo(q.created_at);
+    if(age>=2)acts.push({ic:'✦',t:`<b>${p.full_name}</b> — ${L('propuesta de ','proposta de ')}${money((q.total_cents||0)/100)} ${L('abierta hace ','aberta há ')}${age}${L(' días',' dias')}`,cta:'💬 Follow-up',fn:`dashWa('${p.id}')`});
+  });
+
+  /* aniversários da semana */
+  const bdays=patients.filter(p=>p.birth_date&&week.some(d=>d.slice(5,10)===String(p.birth_date).slice(5,10)));
+
+  const stC={agendada:'',confirmada:'background:rgba(46,158,90,.15);color:#2e9e5a',realizada:'background:rgba(46,158,90,.15);color:#2e9e5a'};
+  el.innerHTML=`
+  <div class="grid kpis">
+    <div class="card kpi"><div class="k-top"><div class="k-ic">📅</div><span>${L('Citas hoy','Consultas hoje')}</span></div><div class="k-val">${todayAppts.length}</div></div>
+    <div class="card kpi"><div class="k-top"><div class="k-ic">💰</div><span>${L('Cerrado esta semana','Fechado na semana')}</span></div><div class="k-val">${money(wkRev)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${wkCount} ${L('procedimientos','procedimentos')}</div></div>
+    <div class="card kpi"><div class="k-top"><div class="k-ic">✦</div><span>${L('Propuestas abiertas','Propostas abertas')}</span></div><div class="k-val">${money(openVal)}</div><div style="font-size:11px;color:var(--muted);margin-top:2px">${open.length} ${L('esperando respuesta','esperando resposta')}</div></div>
+    <div class="card kpi"><div class="k-top"><div class="k-ic">▦</div><span>${L('Ingresos del mes','Receita do mês')}</span></div><div class="k-val">${money(moRev)}</div></div>
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="section-t" style="margin:0 0 4px"><span>📅 ${L('Hoy','Hoje')}</span><button class="btn sm ghost" onclick="show('age')">${L('Ver agenda','Ver agenda')}</button></div>
+    ${todayAppts.length?todayAppts.map(a=>{
+      const p=patients.find(x=>x.id===a.patient_id);
+      return `<div class="today-row" onclick="openApptAct('${a.id}')">
+        <div class="tm">${timeOf(a.starts_at)}</div>
+        ${p?`<div class="avatar" style="width:34px;height:34px;font-size:13px">${avatarHTML(p)}</div>`:''}
+        <div><div class="tn">${p?p.full_name:'—'}</div><div class="tt">${a.treatment||''}${p&&!anamneseFor(p.id)?' · <span style="color:#d98e2b">⚠ '+L('sin anamnesis','sem anamnese')+'</span>':''}</div></div>
+        <span class="st stag" style="${stC[a.status]||''}">${a.status}</span></div>`;
+    }).join(''):`<div class="empty">${L('Sin citas hoy — buen día para follow-ups ✨','Sem consultas hoje — bom dia para follow-ups ✨')}</div>`}
+  </div>
+  <div class="card" style="margin-top:12px">
+    <div class="section-t" style="margin:0 0 4px"><span>✅ ${L('Para hoy','Para hoje')}</span></div>
+    ${acts.length?acts.map(a=>`<div class="act-row"><span class="ic">${a.ic}</span><span>${a.t}</span><button class="btn sm ghost" onclick="${a.fn}">${a.cta}</button></div>`).join(''):`<div class="empty">${L('Todo al día ✓','Tudo em dia ✓')}</div>`}
+  </div>
+  ${bdays.length?`<div class="card" style="margin-top:12px">
+    <div class="section-t" style="margin:0 0 4px"><span>🎂 ${L('Cumpleaños de la semana','Aniversários da semana')}</span></div>
+    <div>${bdays.map(p=>`<span class="bday" onclick="dashWa('${p.id}')">🎂 ${p.full_name} · ${String(p.birth_date).slice(8,10)}/${String(p.birth_date).slice(5,7)}${p.phone?' · 💬':''}</span>`).join('')}</div>
+  </div>`:''}`;
 }
 function renderPatients(){
   const el=document.getElementById('plist');if(!el)return;
@@ -694,7 +985,7 @@ function renderPatients(){
   const list=patients.filter(p=>(p.full_name||'').toLowerCase().includes(q)||(p.phone||'').includes(q));
   document.getElementById('plistEmpty').style.display=patients.length?'none':'block';
   el.innerHTML=list.map(p=>{const spent=(p.procedures||[]).reduce((a,b)=>a+(b.value_cents||0)/100,0);
-    return `<div class="card pcard" onclick="openDetail('${p.id}')"><div class="avatar">${initials(p.full_name)}</div>
+    return `<div class="card pcard" onclick="openDetail('${p.id}')"><div class="avatar">${avatarHTML(p)}</div>
       <div><div class="nm">${p.full_name}${p.vip?'<span class="vip">VIP</span>':''}</div><div class="mt">${(p.procedures||[]).length} ${tr('procs_n')}${p.skin_type?' · '+p.skin_type:''}</div></div>
       <div class="chip"><b>${money(spent)}</b><small>LTV</small></div></div>`;}).join('');
 }
@@ -706,7 +997,7 @@ function renderDetail_legacy(){
   const an=anamneseFor(p.id),alerts=alertsFor(an);
   const alertLang=lang==='pt'?'pt':'es';
   document.getElementById('detailCard').innerHTML=`
-    <div class="phead"><div class="avatar">${initials(p.full_name)}</div>
+    <div class="phead"><div class="avatar">${avatarHTML(p)}</div>
       <div><div style="font-size:19px;font-weight:600">${p.full_name}${p.vip?'<span class="vip">VIP</span>':''}</div>
         <div class="muted" style="font-size:13px;margin-top:3px">${fmtDate(p.birth_date)}${p.phone?' · '+p.phone:''}</div></div>
       <div class="facts"><div class="fact"><small>${tr('skin')}</small><b>${p.skin_type||'—'}</b></div>
@@ -724,11 +1015,17 @@ function startQuoteFor(pid){show('cot');const sel=document.getElementById('qPati
 function show(v){document.querySelectorAll('.view').forEach(x=>x.classList.remove('show'));document.getElementById(v).classList.add('show');
   document.querySelectorAll('.nav a,.mobilenav a').forEach(a=>a.classList.toggle('active',a.dataset.view===v));
   if(v==='dash')renderDash();if(v==='age')renderAgenda();document.querySelector('.content').scrollTop=0;}
-function openPatientModal(){npName.value='';npBirth.value='';npPhone.value='';document.getElementById('ovPatient').classList.add('show');}
+function openPatientModal(){
+  npName.value='';npBirth.value='';npPhone.value='';npEmail.value='';npInstagram.value='';
+  const ccSel=document.getElementById('npCC');
+  ccSel.innerHTML=COUNTRIES.map(c=>`<option value="${c.cc}">${c.flag} +${c.cc} ${c.label}</option>`).join('');
+  ccSel.value='52';
+  document.getElementById('ovPatient').classList.add('show');
+}
 function openProcModal(){
   const sel=document.getElementById('prName');
   sel.innerHTML=Object.values(ALL_ITEMS).map(i=>`<option>${i.name}</option>`).join('');
-  prProduct.value='';prLot.value='';prValue.value='';document.getElementById('ovProc').classList.add('show');}
+  prProduct.value='';prLot.value='';prQty.value='';prArea.value='';prValue.value='';document.getElementById('ovProc').classList.add('show');}
 function closeModal(id){document.getElementById(id).classList.remove('show');}
 document.querySelectorAll('[data-view]').forEach(a=>a.addEventListener('click',()=>show(a.dataset.view)));
 document.querySelectorAll('.overlay').forEach(o=>o.addEventListener('click',e=>{if(e.target===o)o.classList.remove('show');}));
@@ -780,7 +1077,7 @@ function nextActionFor(p,an,clocks,pQuotes){
 }
 function eventsFor(p,an,pQuotes){
   const ev=[];
-  (p.procedures||[]).forEach(x=>ev.push({d:x.performed_at||x.created_at,ic:'◈',t:x.name,m:x.product||'',v:money((x.value_cents||0)/100)}));
+  (p.procedures||[]).forEach(x=>ev.push({d:x.performed_at||x.created_at,ic:'◈',t:x.name,m:[x.product,x.area,x.applied_qty].filter(Boolean).join(' · '),v:money((x.value_cents||0)/100)}));
   pQuotes.forEach(q=>ev.push({d:q.created_at,ic:'✦',t:L('Cotización','Cotização')+' · '+(q.status||'propuesta'),m:(q.items||[]).length+' items',v:money((q.total_cents||0)/100)}));
   if(an)ev.push({d:an.signed_at||an.created_at,ic:'✓',t:L('Anamnesis firmada','Anamnese assinada'),m:an.image_consent?L('Uso de imagen autorizado','Uso de imagem autorizado'):'',v:''});
   if(p.created_at)ev.push({d:p.created_at,ic:'◇',t:L('Paciente registrada','Paciente registrada'),m:'',v:''});
@@ -801,7 +1098,7 @@ function renderDetail(){
   const nextAp=appts.filter(a=>a.patient_id===p.id&&a.status!=='cancelada'&&new Date(a.starts_at)>new Date()).sort((a,b)=>String(a.starts_at).localeCompare(String(b.starts_at)))[0];
   document.getElementById('detailCard').innerHTML=`
    <div class="card">
-    <div class="phead"><div class="avatar">${initials(p.full_name)}</div>
+    <div class="phead"><div class="avatar">${avatarHTML(p)}</div>
       <div><div style="font-size:19px;font-weight:600">${p.full_name} <span class="vip">${stage}</span></div>
         <div class="muted" style="font-size:13px;margin-top:3px">${fmtDate(p.birth_date)}${p.phone?' · '+p.phone:''}</div>
         <div class="score" style="margin-top:7px"><span class="sdot" style="background:${sc.color}"></span><b>${sc.s}</b> Health Score · <a style="color:var(--rose2);cursor:pointer" onclick="toast('${sc.why.join(' · ').replace(/'/g,'')}')">${L('¿por qué?','por quê?')}</a></div></div>
@@ -841,15 +1138,22 @@ function renderPTab(){
          <div><div class="cn">${k.c.label}</div><div class="cs">${k.status==='never'?L('Nunca realizado','Nunca realizado'):fmtDate(k.last)+' · '+L('hace ','há ')+k.ds+L(' días',' dias')}</div></div>
          <span class="tag2 t-${k.status}">${k.status==='never'?'—':k.status==='ok'?'OK':k.status==='due'?L('vence en ','vence em ')+k.left+'d':L('vencido','vencido')}</span></div>`).join('')}</div>
      ${lastP?`<div class="card" style="margin-top:12px"><div class="section-t" style="margin:0 0 6px"><span>${L('Última consulta','Última consulta')}</span></div>
-       <div class="ev" style="border:none;padding:4px 0"><div class="eic">◈</div><div><div class="et">${lastP.name}</div><div class="em">${lastP.product||''}</div></div><div class="ev-r"><div class="ed">${fmtDate(lastP.performed_at)}</div><div class="evv">${money((lastP.value_cents||0)/100)}</div></div></div></div>`:''}`;
+       <div class="ev" style="border:none;padding:4px 0"><div class="eic">◈</div><div><div class="et">${lastP.name}</div><div class="em">${[lastP.product,lastP.area,lastP.applied_qty].filter(Boolean).join(' · ')}</div></div><div class="ev-r"><div class="ed">${fmtDate(lastP.performed_at)}</div><div class="evv">${money((lastP.value_cents||0)/100)}</div></div></div></div>`:''}`;
   }else if(pTab==='jor'){
     const evs=eventsFor(p,an,pQuotes);
     el.innerHTML=`<div class="card">${evs.map(e=>`<div class="ev"><div class="eic">${e.ic}</div><div><div class="et">${e.t}</div>${e.m?`<div class="em">${e.m}</div>`:''}</div><div class="ev-r"><div class="ed">${fmtDate(e.d)}</div>${e.v?`<div class="evv">${e.v}</div>`:''}</div></div>`).join('')||`<div class="empty">—</div>`}</div>`;
   }else if(pTab==='fot'){
-    const slots=['Frontal','45° D','45° E','Perfil D','Perfil E',L('Sonrisa','Sorriso')];
-    el.innerHTML=`<div class="card"><div class="section-t" style="margin:0 0 10px"><span>📷 ${L('Fotos estandarizadas','Fotos padronizadas')}</span></div>
-      <div class="slotgrid">${slots.map(s=>`<div class="slot">📷<br>${s}</div>`).join('')}</div>
-      <div class="empty" style="margin-top:10px">${L('Módulo de fotos en construcción — próxima entrega (2.2).','Módulo de fotos em construção — próxima entrega (2.2).')}</div></div>`;
+    const an2=anamneseFor(p.id);
+    el.innerHTML=`<div class="card"><div class="section-t" style="margin:0 0 10px"><span>📷 ${L('Fotos estandarizadas','Fotos padronizadas')}</span>${an2&&an2.image_consent?`<span class="achip ok" style="font-size:10px">📸 ${L('Uso autorizado','Uso autorizado')}</span>`:''}</div>
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap">
+        <button class="btn sm" onclick="phBulkPick()">📥 ${L('Subir fotos · IA clasifica','Enviar fotos · IA classifica')}</button>
+        <button class="btn sm ghost" onclick="openMosaic()">🖼 ${L('Antes/Después','Antes/Depois')}</button></div>
+      <div class="slotgrid">${PH_SLOTS.map(s=>{const list=phFor(p.id,s.k);
+        return `<div class="slot" onclick="${list.length?`openPhotoViewer('${s.k}')`:`phTake('${s.k}')`}">
+          ${list.length?`<img id="phThumb_${s.k}" alt=""><span class="scount">${list.length}</span>`:'📷'}
+          <span class="slabel">${phLabel(s)}</span></div>`;}).join('')}</div>
+      <div class="empty" style="margin-top:10px">${L('Toca un recuadro vacío para tomar la foto · toca una foto para ver y comparar antes/después.','Toque um quadro vazio para tirar a foto · toque numa foto para ver e comparar antes/depois.')}</div></div>`;
+    fillPhotoThumbs(p.id);
   }else{
     el.innerHTML=`
      <div class="card"><div class="section-t" style="margin:0 0 6px"><span>✓ Compliance</span></div>
@@ -863,12 +1167,264 @@ function renderPTab(){
          <div class="fact"><small>${L('Nacimiento','Nascimento')}</small><b>${fmtDate(p.birth_date)}</b></div>
          <div class="fact"><small>${L('Teléfono','Telefone')}</small><b>${p.phone||'—'}</b></div></div></div>
      <div class="card" style="margin-top:12px"><div class="section-t" style="margin:0 0 6px"><span>${tr('quotes_t')}</span><button class="btn sm ghost" onclick="startQuoteFor('${p.id}')">+ ${tr('quote')}</button></div>
-       ${pQuotes.map(qq=>`<div class="quote-row"><span class="stag">${qq.status||'propuesta'}</span><span class="qd">${fmtDate(qq.created_at)}</span><span>${(qq.items||[]).length} items</span><span class="qt">${money((qq.total_cents||0)/100)}</span></div>`).join('')||`<div class="empty">${tr('no_quotes')}</div>`}</div>`;
+       ${pQuotes.map(qq=>`<div class="quote-row"><span class="stag ${qq.status==='cerrada'?'won':''}">${qq.status==='cerrada'?L('cerrada','fechada'):(qq.status||'propuesta')}</span><span class="qd">${fmtDate(qq.created_at)}</span><span>${(qq.items||[]).length} items</span><span class="qt">${money((qq.total_cents||0)/100)}</span>${qq.status!=='cerrada'?`<button class="btn sm" style="margin-left:8px;padding:4px 10px" onclick="openCloseQuote('${qq.id}')">${L('Fechar ✓','Fechar ✓')}</button>`:''}</div>`).join('')||`<div class="empty">${tr('no_quotes')}</div>`}</div>`;
   }
 }
 
+/* ============ FOTOS (Fatia 2.2) ============ */
+/* Slots padronizados → foto pela câmera → Supabase Storage (bucket privado) → comparador antes/depois */
+/* Protocolo fotográfico da Dra. Isabella:
+   5 expressões de frente + 45° e perfil (90°) dos dois lados em repouso */
+const PH_SLOTS=[
+  {k:'frontal',es:'Normal',pt:'Normal'},
+  {k:'sonrisa',es:'Sonrisa',pt:'Sorrindo'},
+  {k:'triste',es:'Boca triste',pt:'Boca triste'},
+  {k:'enojo',es:'Enojo (ceño)',pt:'Cara de bravo'},
+  {k:'arriba',es:'Mirando arriba',pt:'Olhando p/ cima'},
+  {k:'45d',es:'45° derecha',pt:'45° direita'},
+  {k:'45e',es:'45° izquierda',pt:'45° esquerda'},
+  {k:'perfild',es:'Perfil derecho',pt:'Perfil direito'},
+  {k:'perfile',es:'Perfil izquierdo',pt:'Perfil esquerdo'}
+];
+const phLabel=s=>lang==='pt'?s.pt:s.es;
+let phUrlCache={},phSlotKey=null,phBusy=false,phViewSlot=null,phL=null,phR=null,avatarUrls={};
+function phFor(pid,slot){return photos.filter(f=>f.patient_id===pid&&f.slot===slot);}
+/* Foto de perfil do paciente: sorrindo → frontal → primeira disponível */
+async function buildAvatars(){
+  avatarUrls={};
+  const entries=[];
+  patients.forEach(p=>{
+    const s=phFor(p.id,'sonrisa')[0]||phFor(p.id,'frontal')[0]||photos.find(f=>f.patient_id===p.id);
+    if(s)entries.push([p.id,s.storage_path]);
+  });
+  if(!entries.length)return;
+  if(DEMO){entries.forEach(([pid,path])=>{if(path.startsWith('data:'))avatarUrls[pid]=path;});return;}
+  try{
+    const {data}=await db.storage.from('patient-photos').createSignedUrls(entries.map(e=>e[1]),3600);
+    if(data)data.forEach((d,i)=>{if(d.signedUrl)avatarUrls[entries[i][0]]=d.signedUrl;});
+  }catch(e){console.error(e);}
+}
+function avatarHTML(p){
+  const u=avatarUrls[p.id];
+  return u?`<img src="${u}" alt="">`:initials(p.full_name);
+}
+function phCompress(file){
+  return new Promise((res,rej)=>{
+    const img=new Image(),rd=new FileReader();
+    rd.onload=e=>{img.onload=()=>{
+      const maxDim=1600;let w=img.width,h=img.height;
+      if(w>maxDim||h>maxDim){const r=Math.min(maxDim/w,maxDim/h);w=Math.round(w*r);h=Math.round(h*r);}
+      const c=document.createElement('canvas');c.width=w;c.height=h;
+      c.getContext('2d').drawImage(img,0,0,w,h);
+      c.toBlob(b=>b?res(b):rej(new Error('blob')),'image/jpeg',.85);
+    };img.onerror=rej;img.src=e.target.result;};
+    rd.onerror=rej;rd.readAsDataURL(file);
+  });
+}
+async function getPhotoUrl(path){
+  if(path.startsWith('data:'))return path;
+  if(phUrlCache[path])return phUrlCache[path];
+  const {data,error}=await db.storage.from('patient-photos').createSignedUrl(path,3600);
+  if(error||!data)return null;
+  phUrlCache[path]=data.signedUrl;return data.signedUrl;
+}
+function phTake(slot){if(phBusy)return;phSlotKey=slot;document.getElementById('phInput').click();}
+async function phFiles(files){
+  const list=Array.from(files||[]);
+  document.getElementById('phInput').value='';
+  if(!list.length||!phSlotKey||!currentPatient)return;
+  const slot=phSlotKey;phSlotKey=null;phBusy=true;
+  toast(L('Subiendo ','Enviando ')+list.length+L(' foto(s)…',' foto(s)…'));
+  let ok=0;
+  try{
+    for(let i=0;i<list.length;i++){
+      const file=list[i];
+      if(DEMO){
+        const durl=await new Promise((res,rej)=>{const r=new FileReader();r.onload=e=>res(e.target.result);r.onerror=rej;r.readAsDataURL(file);});
+        photos.unshift({id:'ph'+Date.now()+'_'+i,patient_id:currentPatient.id,slot,storage_path:durl,taken_at:new Date().toISOString()});ok++;
+      }else{
+        const blob=await phCompress(file);
+        if(!CLINIC_ID){const{data}=await db.rpc('current_clinic_id');CLINIC_ID=data;}
+        if(!CLINIC_ID)throw new Error('sin clínica');
+        const path=CLINIC_ID+'/'+currentPatient.id+'/'+slot+'_'+Date.now()+'_'+i+'.jpg';
+        const up=await db.storage.from('patient-photos').upload(path,blob,{contentType:'image/jpeg'});
+        if(up.error)throw up.error;
+        const ins=await db.from('patient_photos').insert({patient_id:currentPatient.id,slot,storage_path:path});
+        if(ins.error)throw ins.error;ok++;
+      }
+    }
+    if(!DEMO){const{data:phd}=await db.from('patient_photos').select('*').order('taken_at',{ascending:false});photos=phd||photos;}
+    await buildAvatars();
+    toast(ok+L(' foto(s) guardada(s) ✅',' foto(s) salva(s) ✅'));
+    if(document.getElementById('ovPhotos').classList.contains('show')){phL=null;phR=null;renderPhotoViewer();}
+    if(pTab==='fot')renderPTab();
+  }catch(e){console.error(e);toast(L('No se pudo subir la foto: ','Não foi possível enviar a foto: ')+(e.message||''));}
+  finally{phBusy=false;}
+}
+async function fillPhotoThumbs(pid){
+  for(const s of PH_SLOTS){
+    const list=phFor(pid,s.k);if(!list.length)continue;
+    const url=await getPhotoUrl(list[0].storage_path);
+    const el=document.getElementById('phThumb_'+s.k);
+    if(el&&url)el.src=url;
+  }
+}
+function openPhotoViewer(slot){phViewSlot=slot;phL=null;phR=null;renderPhotoViewer();document.getElementById('ovPhotos').classList.add('show');}
+async function renderPhotoViewer(){
+  const el=document.getElementById('phBody');if(!el||!currentPatient||!phViewSlot)return;
+  const s=PH_SLOTS.find(x=>x.k===phViewSlot);
+  const list=phFor(currentPatient.id,phViewSlot); /* ordenado: [0]=mais recente */
+  if(!list.length){el.innerHTML=`<h3>📷 ${phLabel(s)}</h3><div class="empty">—</div><div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovPhotos')">${L('Cerrar','Fechar')}</button><button class="btn" onclick="phTake('${phViewSlot}')">📷 ${L('Tomar foto','Tirar foto')}</button></div>`;return;}
+  if(phR==null)phR=0;
+  if(phL==null)phL=list.length-1;
+  phR=Math.min(phR,list.length-1);phL=Math.min(phL,list.length-1);
+  const opts=sel=>list.map((f,j)=>`<option value="${j}" ${j===sel?'selected':''}>${fmtDate(f.taken_at)}</option>`).join('');
+  const compare=list.length>1;
+  el.innerHTML=`<h3>📷 ${phLabel(s)} <small style="color:var(--muted);font-weight:400">· ${list.length} ${L('fotos','fotos')}</small></h3>
+    ${compare?`<div class="ph-compare">
+      <div class="ph-side"><div class="ph-tag">${L('Antes','Antes')}</div><img id="phImgL" alt=""><select onchange="phL=parseInt(this.value);renderPhotoViewer()">${opts(phL)}</select></div>
+      <div class="ph-side"><div class="ph-tag">${L('Después','Depois')}</div><img id="phImgR" alt=""><select onchange="phR=parseInt(this.value);renderPhotoViewer()">${opts(phR)}</select></div>
+    </div>`:`<div class="ph-side"><img id="phImgR" alt="" style="width:100%"><div class="ph-tag" style="margin-top:6px">${fmtDate(list[0].taken_at)}</div></div>`}
+    <div class="modal-actions" style="margin-top:14px">
+      <button class="btn ghost" onclick="closeModal('ovPhotos')">${L('Cerrar','Fechar')}</button>
+      <button class="btn" onclick="phTake('${phViewSlot}')">📷 ${L('Nueva foto','Nova foto')}</button></div>`;
+  if(compare){
+    const[ul,ur]=await Promise.all([getPhotoUrl(list[phL].storage_path),getPhotoUrl(list[phR].storage_path)]);
+    const eL=document.getElementById('phImgL'),eR=document.getElementById('phImgR');
+    if(eL&&ul)eL.src=ul;if(eR&&ur)eR.src=ur;
+  }else{
+    const u=await getPhotoUrl(list[0].storage_path);
+    const eR=document.getElementById('phImgR');if(eR&&u)eR.src=u;
+  }
+}
+
+/* ---- Upload em lote com classificação por IA ---- */
+let bulkItems=[],bulkBusy=false;
+function phBulkPick(){if(bulkBusy)return;document.getElementById('phBulkInput').click();}
+async function phBulkFiles(files){
+  const fl=Array.from(files||[]);document.getElementById('phBulkInput').value='';
+  if(!fl.length||!currentPatient)return;
+  if(DEMO){toast(L('Clasificación IA no disponible en demo.','Classificação IA não disponível no demo.'));return;}
+  bulkBusy=true;bulkItems=[];
+  const el=document.getElementById('bulkBody');
+  el.innerHTML=`<h3>📥 ${L('Clasificando fotos…','Classificando fotos…')}</h3><div class="wz-sub">${L('La IA está identificando el encuadre de cada una de las ','A IA está identificando o enquadramento de cada uma das ')}${fl.length}${L(' fotos. Unos segundos…',' fotos. Alguns segundos…')}</div>`;
+  document.getElementById('ovBulk').classList.add('show');
+  try{
+    const {data:{session}}=await db.auth.getSession();
+    const auth='Bearer '+(session?session.access_token:SUPABASE_KEY);
+    bulkItems=await Promise.all(fl.map(async(file)=>{
+      const dataUrl=await wzCompressImage(file);
+      let slot='frontal',conf=0;
+      try{
+        const res=await fetch(CLASSIFY_URL,{method:'POST',headers:{'content-type':'application/json','authorization':auth},
+          body:JSON.stringify({image_base64:dataUrl.split(',')[1],media_type:'image/jpeg'})});
+        const out=await res.json();
+        if(res.ok&&out.data&&out.data.slot){slot=out.data.slot;conf=out.data.confidence||0;}
+      }catch(e){console.error(e);}
+      return {dataUrl,slot,conf};
+    }));
+    renderBulkReview();
+  }catch(e){console.error(e);toast(L('Error al clasificar.','Erro ao classificar.'));closeModal('ovBulk');}
+  finally{bulkBusy=false;}
+}
+function renderBulkReview(){
+  const el=document.getElementById('bulkBody');
+  const counts={};bulkItems.forEach(b=>counts[b.slot]=(counts[b.slot]||0)+1);
+  el.innerHTML=`<h3>📥 ${L('Revisar clasificación','Revisar classificação')}</h3>
+    <div class="wz-sub" style="margin-bottom:10px">${L('Confirma el encuadre de cada foto. Si hay 2+ en el mismo encuadre (⚠), se guardan todas — la más nueva será la principal y en el comparador puedes elegir cualquiera por fecha.','Confirme o enquadramento de cada foto. Se houver 2+ no mesmo enquadramento (⚠), todas são salvas — a mais nova vira a principal e no comparador você escolhe qualquer uma pela data.')}</div>
+    ${bulkItems.map((b,i)=>`<div style="display:flex;gap:10px;align-items:center;margin-bottom:10px;padding:8px;border:1.5px solid ${counts[b.slot]>1?'rgba(217,142,43,.55)':'var(--border)'};border-radius:12px">
+      <img src="${b.dataUrl}" style="width:64px;height:84px;object-fit:cover;border-radius:8px;flex-shrink:0">
+      <div style="flex:1">
+        <select onchange="bulkItems[${i}].slot=this.value;renderBulkReview()" style="width:100%;padding:7px;border-radius:8px;border:1px solid var(--border);background:var(--surface2);color:var(--text);font-size:13px">
+          ${PH_SLOTS.map(s=>`<option value="${s.k}" ${s.k===b.slot?'selected':''}>${phLabel(s)}</option>`).join('')}
+        </select>
+        <small style="color:var(--muted);font-size:11px">IA ${Math.round((b.conf||0)*100)}%${counts[b.slot]>1?' · ⚠ '+L('encuadre repetido','enquadramento repetido'):''}</small>
+      </div></div>`).join('')}
+    <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovBulk')">${L('Cancelar','Cancelar')}</button>
+    <button class="btn" id="bulkSaveBtn" onclick="bulkSave()">${L('Guardar ','Salvar ')}${bulkItems.length}</button></div>`;
+}
+async function bulkSave(){
+  const btn=document.getElementById('bulkSaveBtn');btn.disabled=true;
+  try{
+    if(!CLINIC_ID){const{data}=await db.rpc('current_clinic_id');CLINIC_ID=data;}
+    if(!CLINIC_ID)throw new Error('sin clínica');
+    for(let i=0;i<bulkItems.length;i++){
+      const b=bulkItems[i];
+      const blob=await(await fetch(b.dataUrl)).blob();
+      const path=CLINIC_ID+'/'+currentPatient.id+'/'+b.slot+'_'+Date.now()+'_'+i+'.jpg';
+      const up=await db.storage.from('patient-photos').upload(path,blob,{contentType:'image/jpeg'});
+      if(up.error)throw up.error;
+      const ins=await db.from('patient_photos').insert({patient_id:currentPatient.id,slot:b.slot,storage_path:path});
+      if(ins.error)throw ins.error;
+    }
+    const{data:phd}=await db.from('patient_photos').select('*').order('taken_at',{ascending:false});photos=phd||photos;
+    await buildAvatars();
+    closeModal('ovBulk');renderPTab();toast(bulkItems.length+L(' fotos guardadas ✅',' fotos salvas ✅'));
+  }catch(e){console.error(e);btn.disabled=false;toast(L('Error al guardar: ','Erro ao salvar: ')+(e.message||''));}
+}
+
+/* ---- Mosaico antes/depois ---- */
+function openMosaic(){
+  const p=currentPatient;if(!p)return;
+  const avail=PH_SLOTS.filter(s=>phFor(p.id,s.k).length>=2);
+  const el=document.getElementById('mosaicBody');
+  if(!avail.length){
+    el.innerHTML=`<h3>🖼 ${L('Mosaico antes/después','Mosaico antes/depois')}</h3><div class="empty">${L('Necesitas al menos 2 fotos del mismo encuadre (antes y después) para comparar.','Você precisa de ao menos 2 fotos do mesmo enquadramento (antes e depois) para comparar.')}</div><div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovMosaic')">${L('Cerrar','Fechar')}</button></div>`;
+  }else{
+    el.innerHTML=`<h3>🖼 ${L('Mosaico antes/después','Mosaico antes/depois')}</h3>
+      <div class="wz-sub" style="margin-bottom:8px">${L('Elige los encuadres a incluir — usa la foto más antigua vs. la más reciente de cada uno:','Escolha os enquadramentos — usa a foto mais antiga vs. a mais recente de cada um:')}</div>
+      ${avail.map(s=>`<div class="chkrow on" id="mSlot_${s.k}" onclick="this.classList.toggle('on');this.querySelector('.box').textContent=this.classList.contains('on')?'✓':''"><div class="box">✓</div>${phLabel(s)}</div>`).join('')}
+      <div class="modal-actions"><button class="btn ghost" onclick="closeModal('ovMosaic')">${L('Cancelar','Cancelar')}</button><button class="btn" id="mosaicBtn" onclick="genMosaic()">${L('Generar imagen','Gerar imagem')}</button></div>`;
+  }
+  document.getElementById('ovMosaic').classList.add('show');
+}
+function drawCover(ctx,img,x,y,w,h){
+  const ir=img.width/img.height,r=w/h;let sw,sh,sx,sy;
+  if(ir>r){sh=img.height;sw=sh*r;sx=(img.width-sw)/2;sy=0;}else{sw=img.width;sh=sw/r;sx=0;sy=(img.height-sh)/2;}
+  ctx.drawImage(img,sx,sy,sw,sh,x,y,w,h);
+}
+function loadImg(url){return new Promise((res,rej)=>{const im=new Image();im.crossOrigin='anonymous';im.onload=()=>res(im);im.onerror=rej;im.src=url;});}
+async function genMosaic(){
+  const p=currentPatient;const btn=document.getElementById('mosaicBtn');btn.disabled=true;btn.textContent='…';
+  try{
+    const sel=PH_SLOTS.filter(s=>{const e=document.getElementById('mSlot_'+s.k);return e&&e.classList.contains('on');});
+    const rows=[];
+    for(const s of sel){
+      const list=phFor(p.id,s.k);if(list.length<2)continue;
+      const before=list[list.length-1],after=list[0];
+      const[ub,ua]=await Promise.all([getPhotoUrl(before.storage_path),getPhotoUrl(after.storage_path)]);
+      const[ib,ia]=await Promise.all([loadImg(ub),loadImg(ua)]);
+      rows.push({s,ib,ia,db:before.taken_at,da:after.taken_at});
+    }
+    if(!rows.length)throw new Error('sin encuadres seleccionados');
+    const W=1080,M=40,G=16,head=120,label=46,cw=(W-2*M-G)/2,ch=cw*4/3,rowH=label+ch+34;
+    const H=head+rows.length*rowH+56;
+    const c=document.createElement('canvas');c.width=W;c.height=H;const x=c.getContext('2d');
+    x.fillStyle='#faf7f2';x.fillRect(0,0,W,H);
+    x.fillStyle='#1a1a2e';x.font='600 40px Helvetica, Arial';x.textAlign='center';
+    x.fillText(L('Antes & Después','Antes & Depois'),W/2,62);
+    x.font='24px Helvetica, Arial';x.fillStyle='#c97b8e';x.fillText(p.full_name||'',W/2,98);
+    rows.forEach((r,i)=>{
+      const y=head+i*rowH;
+      x.fillStyle='#8a8578';x.font='600 22px Helvetica, Arial';x.textAlign='left';
+      x.fillText(phLabel(r.s).toUpperCase(),M,y+30);
+      drawCover(x,r.ib,M,y+label,cw,ch);
+      drawCover(x,r.ia,M+cw+G,y+label,cw,ch);
+      x.fillStyle='#8a8578';x.font='18px Helvetica, Arial';x.textAlign='center';
+      x.fillText('Antes · '+fmtDate(r.db),M+cw/2,y+label+ch+24);
+      x.fillText(L('Después · ','Depois · ')+fmtDate(r.da),M+cw+G+cw/2,y+label+ch+24);
+    });
+    x.fillStyle='#c9a66b';x.font='20px Helvetica, Arial';x.textAlign='center';
+    x.fillText('Harmony Clinic ✨',W/2,H-20);
+    const url=c.toDataURL('image/jpeg',.92);
+    const a=document.createElement('a');a.href=url;a.download='antes-despues-'+(p.full_name||'paciente').toLowerCase().replace(/\s+/g,'-')+'.jpg';
+    document.body.appendChild(a);a.click();a.remove();
+    closeModal('ovMosaic');toast(L('Mosaico generado — revisa tus descargas 📥','Mosaico gerado — veja seus downloads 📥'));
+  }catch(e){console.error(e);toast(L('No se pudo generar el mosaico.','Não foi possível gerar o mosaico.'));btn.disabled=false;btn.textContent=L('Generar imagen','Gerar imagem');}
+}
+
 /* ============ AGENDA (Fatia 3) ============ */
-let appts=[],agDate=null,curAppt=null;
+let appts=[],agDate=null,curAppt=null,agMode='day';
 const pad=n=>('0'+n).slice(-2);
 const localISO=d=>d.getFullYear()+'-'+pad(d.getMonth()+1)+'-'+pad(d.getDate());
 const timeOf=iso=>{const d=new Date(iso);return pad(d.getHours())+':'+pad(d.getMinutes());};
@@ -878,13 +1434,31 @@ const stl=s=>lang==='pt'?(STL[s]||[s,s])[1]:(STL[s]||[s,s])[0];
 function weekOf(dateStr){const d=new Date(dateStr+'T12:00');const dow=(d.getDay()+6)%7;const mon=new Date(d);mon.setDate(d.getDate()-dow);return Array.from({length:7},(_,i)=>{const x=new Date(mon);x.setDate(mon.getDate()+i);return localISO(x);});}
 function apptsOn(dateStr){return appts.filter(a=>a.status!=='cancelada'&&localISO(new Date(a.starts_at))===dateStr).concat(appts.filter(a=>a.status==='cancelada'&&localISO(new Date(a.starts_at))===dateStr)).sort((a,b)=>String(a.starts_at).localeCompare(String(b.starts_at)));}
 function patientOf(a){return patients.find(p=>p.id===a.patient_id);}
+function setAgMode(m){agMode=m;renderAgenda();}
+function shiftWeek(n){const b=new Date((agDate||localISO(new Date()))+'T12:00');b.setDate(b.getDate()+n*7);agDate=localISO(b);renderAgenda();}
 function renderAgenda(){
   const el=document.getElementById('agBody');if(!el)return;
   if(!agDate)agDate=localISO(new Date());
-  const week=weekOf(agDate),today=localISO(new Date());
+  const today=localISO(new Date());
+  const wrap=document.getElementById('agModeWrap');if(wrap)wrap.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===agMode));
+  const strip=document.getElementById('agStrip'),title=document.getElementById('agTitle');
+  if(agMode==='week'){
+    strip.style.display='none';title.style.display='none';
+    const week=weekOf(agDate);
+    const DN=lang==='pt'?['Seg','Ter','Qua','Qui','Sex','Sáb','Dom']:['Lun','Mar','Mié','Jue','Vie','Sáb','Dom'];
+    let tot=0;
+    const days=week.map((d,i)=>{
+      const list=apptsOn(d).filter(a=>a.status!=='cancelada');tot+=list.length;
+      return `<div class="wkday ${d===today?'today':''}"><div class="wkh"><b>${DN[i]}</b> <small>${parseInt(d.slice(8),10)}/${d.slice(5,7)}</small><span class="wkcount ${list.length?'has':''}">${list.length} ${L('paciente','paciente')}${list.length===1?'':'s'}</span></div>
+        ${list.map(a=>{const p=patientOf(a);return `<div class="wkslot" onclick="openApptAct('${a.id}')"><div class="wt">${timeOf(a.starts_at)}</div><div style="min-width:0;flex:1"><div style="font-size:13px;font-weight:600">${p?p.full_name:'—'}</div><div style="font-size:11.5px;color:var(--muted)">${a.treatment||''}</div></div><span class="stbadge st-${a.status}">${stl(a.status)}</span></div>`;}).join('')||`<div class="empty" style="padding:2px 2px 6px">${L('Libre','Livre')}</div>`}</div>`;}).join('');
+    el.innerHTML=`<div class="wknav"><button onclick="shiftWeek(-1)">‹</button><b>${L('Semana del ','Semana de ')}${parseInt(week[0].slice(8),10)}/${week[0].slice(5,7)}</b><button onclick="shiftWeek(1)">›</button><span class="wktot">${tot} ${L('citas','consultas')}</span></div>${days}`;
+    return;
+  }
+  strip.style.display='';title.style.display='';
+  const week=weekOf(agDate);
   const DN=lang==='pt'?['seg','ter','qua','qui','sex','sáb','dom']:['lun','mar','mié','jue','vie','sáb','dom'];
-  document.getElementById('agStrip').innerHTML=week.map((d,i)=>`<div class="day ${d===agDate?'on':''} ${d===today?'today':''}" onclick="agDate='${d}';renderAgenda()"><small>${DN[i]}</small><b>${parseInt(d.slice(8),10)}</b></div>`).join('');
-  document.getElementById('agTitle').textContent=fmtDate(agDate)+(agDate===today?(' · '+L('hoy','hoje')):'');
+  strip.innerHTML=week.map((d,i)=>`<div class="day ${d===agDate?'on':''} ${d===today?'today':''}" onclick="agDate='${d}';renderAgenda()"><small>${DN[i]}</small><b>${parseInt(d.slice(8),10)}</b></div>`).join('');
+  title.textContent=fmtDate(agDate)+(agDate===today?(' · '+L('hoy','hoje')):'');
   const list=apptsOn(agDate);
   const unconf=list.filter(a=>a.status==='programada').length;
   el.innerHTML=(agDate===today&&unconf?`<div class="banner">📋 ${unconf} ${L('cita(s) por confirmar hoy — toca cada una y envía el WhatsApp.','consulta(s) por confirmar hoje — toque em cada uma e envie o WhatsApp.')}</div>`:'')+
