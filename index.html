@@ -1444,7 +1444,12 @@ function setAgMode(m){agMode=m;renderAgenda();}
 function shiftWeek(n){const b=new Date((agDate||localISO(new Date()))+'T12:00');b.setDate(b.getDate()+n*7);agDate=localISO(b);renderAgenda();}
 function renderAgenda(){
   const el=document.getElementById('agBody');if(!el)return;
-  if(!agDate)agDate=localISO(new Date());
+  if(!agDate){
+    /* abre direto na próxima cita futura; sem citas futuras, cai em hoje */
+    const nx=appts.filter(a=>a.status!=='cancelada'&&new Date(a.starts_at).getTime()>=Date.now()-3600000)
+      .sort((a,b)=>String(a.starts_at).localeCompare(String(b.starts_at)))[0];
+    agDate=nx?localISO(new Date(nx.starts_at)):localISO(new Date());
+  }
   const today=localISO(new Date());
   const wrap=document.getElementById('agModeWrap');if(wrap)wrap.querySelectorAll('button').forEach(b=>b.classList.toggle('on',b.dataset.m===agMode));
   const strip=document.getElementById('agStrip'),title=document.getElementById('agTitle');
@@ -1470,7 +1475,7 @@ function renderAgenda(){
   el.innerHTML=(agDate===today&&unconf?`<div class="banner">📋 ${unconf} ${L('cita(s) por confirmar hoy — toca cada una y envía el WhatsApp.','consulta(s) por confirmar hoje — toque em cada uma e envie o WhatsApp.')}</div>`:'')+
    (list.length?list.map(a=>{const p=patientOf(a);return `<div class="card appt2" onclick="openApptAct('${a.id}')">
       <div class="at">${timeOf(a.starts_at)}<small>${a.duration_min}min</small></div>
-      <div class="avatar" style="width:38px;height:38px;font-size:14px">${initials(p?p.full_name:'?')}</div>
+      <div class="avatar" style="width:38px;height:38px;font-size:14px">${p?avatarHTML(p):'?'}</div>
       <div style="min-width:0"><div style="font-size:14.5px;font-weight:600">${p?p.full_name:L('(sin paciente)','(sem paciente)')}</div><div style="font-size:12px;color:var(--muted)">${a.treatment||''}</div></div>
       <span class="stbadge st-${a.status}" style="margin-left:auto">${stl(a.status)}</span></div>`;}).join('')
     :`<div class="empty">${L('Sin citas este día.','Sem consultas neste dia.')}</div>`);
