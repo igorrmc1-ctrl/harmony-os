@@ -486,6 +486,8 @@ const SCAN_URL=SUPABASE_URL+'/functions/v1/anamnesis-scan';
 const PRODUCT_SCAN_URL=SUPABASE_URL+'/functions/v1/product-scan';
 const CLASSIFY_URL=SUPABASE_URL+'/functions/v1/photo-classify';
 const EMAIL_URL=SUPABASE_URL+'/functions/v1/send-appointment-email';
+const CLINIC_ADDR='Edificio Lumek Clinic, Calle Querétaro 27, Consultorio 102, Roma Nte., Cuauhtémoc, 06700 Ciudad de México';
+const CLINIC_MAPS='https://maps.app.goo.gl/s1XJXnHvTckm7aLo6?g_st=ic';
 const DEMO=new URLSearchParams(location.search).has('demo');
 let db=null; if(!DEMO){ try{ db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);}catch(e){console.error(e);} }
 
@@ -1933,19 +1935,19 @@ async function setApptStatus(s){
 function gcalFor(a){
   const st=new Date(a.starts_at),en=new Date(st.getTime()+(a.duration_min||60)*60000);
   const f=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
-  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Harmony Clinic · '+(a.treatment||'Cita'))+'&dates='+f(st)+'/'+f(en)+'&location='+encodeURIComponent('Calle Querétaro 27, Consultorio 102, Roma Norte, CDMX')+'&details='+encodeURIComponent('Tu cita en Harmony Clinic ✨');
+  return 'https://calendar.google.com/calendar/render?action=TEMPLATE&text='+encodeURIComponent('Harmony Clinic · '+(a.treatment||'Cita'))+'&dates='+f(st)+'/'+f(en)+'&location='+encodeURIComponent(CLINIC_ADDR)+'&details='+encodeURIComponent('Tu cita en Harmony Clinic ✨');
 }
 function waConfirm(){
   const p=patientOf(curAppt);if(!p||!p.phone)return;
   let d=(p.phone||'').replace(/\D/g,'');if(d.length===10)d='52'+d;
-  const msg='Hola '+(p.full_name||'').split(' ')[0]+' ✨ Te confirmamos tu cita en Harmony Clinic el '+fmtDate(curAppt.starts_at)+' a las '+timeOf(curAppt.starts_at)+' ('+(curAppt.treatment||'valoración')+'). Responde SÍ para confirmar 💛 Agrégala a tu calendario: '+gcalFor(curAppt);
+  const msg='Hola '+(p.full_name||'').split(' ')[0]+' ✨ Te confirmamos tu cita en Harmony Clinic:\n\n📌 Detalles de tu cita:\n📅 Fecha: '+fmtDate(curAppt.starts_at)+'\n⏰ Hora: '+timeOf(curAppt.starts_at)+' ('+(curAppt.treatment||'valoración')+')\n📍 Ubicación: '+CLINIC_ADDR+'.\n🚗 Valet parking disponible en el edificio.\nGoogle maps: '+CLINIC_MAPS+'\n\nResponde SÍ para confirmar 💛 Agrégala a tu calendario: '+gcalFor(curAppt);
   window.open('https://wa.me/'+d+'?text='+encodeURIComponent(msg),'_blank');
 }
 function icsDownload(){
   const p=patientOf(curAppt);
   const st=new Date(curAppt.starts_at),en=new Date(st.getTime()+(curAppt.duration_min||60)*60000);
   const f=d=>d.toISOString().replace(/[-:]/g,'').replace(/\.\d{3}/,'');
-  const ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//HarmonyOS//ES\r\nBEGIN:VEVENT\r\nUID:'+curAppt.id+'@harmonyos\r\nDTSTAMP:'+f(new Date())+'\r\nDTSTART:'+f(st)+'\r\nDTEND:'+f(en)+'\r\nSUMMARY:Harmony Clinic · '+(p?p.full_name:'Cita')+'\r\nDESCRIPTION:'+(curAppt.treatment||'')+'\r\nLOCATION:Calle Querétaro 27\\, Consultorio 102\\, Roma Norte\\, CDMX\r\nEND:VEVENT\r\nEND:VCALENDAR';
+  const ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//HarmonyOS//ES\r\nBEGIN:VEVENT\r\nUID:'+curAppt.id+'@harmonyos\r\nDTSTAMP:'+f(new Date())+'\r\nDTSTART:'+f(st)+'\r\nDTEND:'+f(en)+'\r\nSUMMARY:Harmony Clinic · '+(p?p.full_name:'Cita')+'\r\nDESCRIPTION:'+(curAppt.treatment||'')+'\r\nLOCATION:'+CLINIC_ADDR.replace(/,/g,'\\,')+'\r\nURL:'+CLINIC_MAPS+'\r\nEND:VEVENT\r\nEND:VCALENDAR';
   const b=new Blob([ics],{type:'text/calendar'});const u=URL.createObjectURL(b);
   const l=document.createElement('a');l.href=u;l.download='harmony-cita.ics';l.click();URL.revokeObjectURL(u);
 }
