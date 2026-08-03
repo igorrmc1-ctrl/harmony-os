@@ -916,9 +916,13 @@ function renderDash(){
   const today=localISO(new Date()),week=weekOf(today),mm=today.slice(0,7);
   const daysAgo=d=>Math.floor((Date.now()-new Date(d).getTime())/86400000);
 
-  /* citas de hoy */
+  /* citas de hoy (KPI) + próximas citas (lista, independente do dia) */
   const todayAppts=appts.filter(a=>a.status!=='cancelada'&&localISO(new Date(a.starts_at))===today)
     .sort((a,b)=>String(a.starts_at).localeCompare(String(b.starts_at)));
+  const upcoming=appts.filter(a=>a.status!=='cancelada'&&localISO(new Date(a.starts_at))>=today)
+    .sort((a,b)=>String(a.starts_at).localeCompare(String(b.starts_at))).slice(0,6);
+  const tomorrow=localISO(new Date(Date.now()+86400000));
+  const dayLabel=iso=>{const d=localISO(new Date(iso));return d===today?L('Hoy','Hoje'):d===tomorrow?L('Mañana','Amanhã'):fmtDate(iso);};
 
   /* fechado na semana e no mês (procedimentos realizados) */
   let wkRev=0,wkCount=0,moRev=0;
@@ -933,10 +937,11 @@ function renderDash(){
   const openVal=open.reduce((a,q)=>a+(q.total_cents||0)/100,0);
 
   /* ações do dia */
-  const acts=[];
-  todayAppts.forEach(a=>{
+  const acts=[];const actSeen=new Set();
+  upcoming.forEach(a=>{
     const p=patients.find(x=>x.id===a.patient_id);
-    if(p&&!anamneseFor(p.id))acts.push({ic:'⚠️',t:`<b>${p.full_name}</b> — ${L('cita hoy sin anamnesis firmada','consulta hoje sem anamnese assinada')}`,cta:L('Resolver','Resolver'),fn:`openDetail('${p.id}')`});
+    if(p&&!anamneseFor(p.id)&&!actSeen.has(p.id)){actSeen.add(p.id);
+      acts.push({ic:'⚠️',t:`<b>${p.full_name}</b> — ${L('cita ','consulta ')}${dayLabel(a.starts_at).toLowerCase()} ${L('sin anamnesis firmada','sem anamnese assinada')}`,cta:L('Resolver','Resolver'),fn:`openDetail('${p.id}')`});}
   });
   const overs=[];
   patients.forEach(p=>clocksFor(p).forEach(k=>{if(k.status==='over')overs.push({p,k});}));
@@ -960,15 +965,16 @@ function renderDash(){
     <div class="card kpi"><div class="k-top"><div class="k-ic">▦</div><span>${L('Ingresos del mes','Receita do mês')}</span></div><div class="k-val">${money(moRev)}</div></div>
   </div>
   <div class="card" style="margin-top:12px">
-    <div class="section-t" style="margin:0 0 4px"><span>📅 ${L('Hoy','Hoje')}</span><button class="btn sm ghost" onclick="show('age')">${L('Ver agenda','Ver agenda')}</button></div>
-    ${todayAppts.length?todayAppts.map(a=>{
+    <div class="section-t" style="margin:0 0 4px"><span>📅 ${L('Próximas citas','Próximas consultas')}</span><button class="btn sm ghost" onclick="show('age')">${L('Ver agenda','Ver agenda')}</button></div>
+    ${upcoming.length?upcoming.map(a=>{
       const p=patients.find(x=>x.id===a.patient_id);
+      const isToday=localISO(new Date(a.starts_at))===today;
       return `<div class="today-row" onclick="openApptAct('${a.id}')">
-        <div class="tm">${timeOf(a.starts_at)}</div>
+        <div class="tm">${timeOf(a.starts_at)}<div style="font-size:9.5px;font-weight:600;color:${isToday?'var(--rose2)':'var(--muted)'};letter-spacing:.3px">${dayLabel(a.starts_at)}</div></div>
         ${p?`<div class="avatar" style="width:34px;height:34px;font-size:13px">${avatarHTML(p)}</div>`:''}
         <div><div class="tn">${p?p.full_name:'—'}</div><div class="tt">${a.treatment||''}${p&&!anamneseFor(p.id)?' · <span style="color:#d98e2b">⚠ '+L('sin anamnesis','sem anamnese')+'</span>':''}</div></div>
         <span class="st stag" style="${stC[a.status]||''}">${a.status}</span></div>`;
-    }).join(''):`<div class="empty">${L('Sin citas hoy — buen día para follow-ups ✨','Sem consultas hoje — bom dia para follow-ups ✨')}</div>`}
+    }).join(''):`<div class="empty">${L('Sin citas próximas — buen momento para follow-ups ✨','Sem consultas próximas — bom momento para follow-ups ✨')}</div>`}
   </div>
   <div class="card" style="margin-top:12px">
     <div class="section-t" style="margin:0 0 4px"><span>✅ ${L('Para hoy','Para hoje')}</span></div>
@@ -1205,7 +1211,7 @@ async function buildAvatars(){
   }catch(e){console.error(e);}
 }
 function avatarHTML(p){
-  const u=avatarUrls[p.id];
+  const u=avatarUrls[p.id]||p.avatar_url;
   return u?`<img src="${u}" alt="">`:initials(p.full_name);
 }
 function phCompress(file){
