@@ -485,6 +485,7 @@ const SUPABASE_KEY='eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSI
 const SCAN_URL=SUPABASE_URL+'/functions/v1/anamnesis-scan';
 const PRODUCT_SCAN_URL=SUPABASE_URL+'/functions/v1/product-scan';
 const CLASSIFY_URL=SUPABASE_URL+'/functions/v1/photo-classify';
+const EMAIL_URL=SUPABASE_URL+'/functions/v1/send-appointment-email';
 const DEMO=new URLSearchParams(location.search).has('demo');
 let db=null; if(!DEMO){ try{ db=window.supabase.createClient(SUPABASE_URL,SUPABASE_KEY);}catch(e){console.error(e);} }
 
@@ -1899,11 +1900,14 @@ async function saveAppt(){
     if(DEMO){const a=appts.find(x=>x.id===editingApptId);if(a)Object.assign(a,rec);}
     else{const btn=document.getElementById('saveApptBtn');btn.disabled=true;const{error}=await db.from('appointments').update(rec).eq('id',editingApptId);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
     closeModal('ovAppt');agDate=date;renderAgenda();renderDash();toast(L('Cita actualizada ✅','Consulta atualizada ✅'));
+    sendApptEmail(editingApptId,{silent:true});
   }else{
     rec.status='programada';
-    if(DEMO){appts.push({id:'ap'+Date.now(),...rec});}
-    else{const btn=document.getElementById('saveApptBtn');btn.disabled=true;const{error}=await db.from('appointments').insert(rec);btn.disabled=false;if(error){alert(error.message);return;}await loadAll();}
+    let newId=null;
+    if(DEMO){newId='ap'+Date.now();appts.push({id:newId,...rec});}
+    else{const btn=document.getElementById('saveApptBtn');btn.disabled=true;const{data,error}=await db.from('appointments').insert(rec).select('id').single();btn.disabled=false;if(error){alert(error.message);return;}newId=data&&data.id;await loadAll();}
     closeModal('ovAppt');agDate=date;renderAgenda();renderDash();toast(L('Cita creada ✅','Consulta criada ✅'));
+    if(newId)sendApptEmail(newId,{silent:true});
   }
 }
 function openApptAct(id){
@@ -1913,6 +1917,7 @@ function openApptAct(id){
     <h3>${p?p.full_name:L('Cita','Consulta')} · ${timeOf(curAppt.starts_at)}</h3>
     <div class="muted" style="font-size:12.5px;margin:-6px 0 14px">${fmtDate(curAppt.starts_at)} · ${curAppt.treatment||''} · ${curAppt.duration_min}min</div>
     ${p&&p.phone?`<button class="wa" style="width:100%;justify-content:center;margin-bottom:8px" onclick="waConfirm()">💬 ${L('Confirmar por WhatsApp','Confirmar por WhatsApp')}</button>`:''}
+    ${p&&p.email?`<button class="btn ghost full" style="margin-bottom:8px" onclick="sendApptEmail('${curAppt.id}')">✉️ ${L('Reenviar confirmación por e-mail','Reenviar confirmação por e-mail')}</button>`:''}
     <button class="btn ghost full" style="margin-bottom:8px" onclick="icsDownload()">📅 ${L('Agregar a mi calendario (.ics)','Adicionar ao meu calendário (.ics)')}</button>
     ${p?`<button class="btn ghost full" style="margin-bottom:8px" onclick="closeModal('ovApptAct');openDetail('${p.id}')">☺ ${L('Ver paciente','Ver paciente')}</button>`:''}
     <button class="btn ghost full" style="margin-bottom:14px" onclick="openEditApptModal()">✏️ ${L('Editar cita','Editar consulta')}</button>
@@ -1943,6 +1948,22 @@ function icsDownload(){
   const ics='BEGIN:VCALENDAR\r\nVERSION:2.0\r\nPRODID:-//HarmonyOS//ES\r\nBEGIN:VEVENT\r\nUID:'+curAppt.id+'@harmonyos\r\nDTSTAMP:'+f(new Date())+'\r\nDTSTART:'+f(st)+'\r\nDTEND:'+f(en)+'\r\nSUMMARY:Harmony Clinic · '+(p?p.full_name:'Cita')+'\r\nDESCRIPTION:'+(curAppt.treatment||'')+'\r\nLOCATION:Calle Querétaro 27\\, Consultorio 102\\, Roma Norte\\, CDMX\r\nEND:VEVENT\r\nEND:VCALENDAR';
   const b=new Blob([ics],{type:'text/calendar'});const u=URL.createObjectURL(b);
   const l=document.createElement('a');l.href=u;l.download='harmony-cita.ics';l.click();URL.revokeObjectURL(u);
+}
+async function sendApptEmail(apptId,opts={}){
+  if(DEMO){if(!opts.silent)toast(L('No disponible en modo demo.','Não disponível no modo demo.'));return;}
+  const warnMsg=L('No se pudo enviar el e-mail de confirmación.','Não foi possível enviar o e-mail de confirmação.');
+  try{
+    const{data:{session}}=await db.auth.getSession();
+    const res=await fetch(EMAIL_URL,{method:'POST',headers:{'content-type':'application/json','authorization':'Bearer '+(session?session.access_token:SUPABASE_KEY)},
+      body:JSON.stringify({appointment_id:apptId})});
+    const out=await res.json();
+    if(!res.ok||out.error){console.error('sendApptEmail',out);if(opts.silent)setTimeout(()=>toast('⚠️ '+warnMsg),2800);else toast('⚠️ '+warnMsg);return;}
+    if(out.skipped){if(!opts.silent)toast(L('Paciente sin e-mail registrado.','Paciente sem e-mail cadastrado.'));return;}
+    if(!opts.silent)toast(L('E-mail de confirmación enviado ✅','E-mail de confirmação enviado ✅'));
+  }catch(e){
+    console.error('sendApptEmail',e);
+    if(opts.silent)setTimeout(()=>toast('⚠️ '+warnMsg),2800);else toast('⚠️ '+warnMsg);
+  }
 }
 
 /* ============ START ============ */
